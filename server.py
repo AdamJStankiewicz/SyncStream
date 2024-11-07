@@ -13,10 +13,20 @@ connection = sqlite3.connect('syncstream.db', check_same_thread=False)
 cursor = connection.cursor()
 
 def init():
-    
-    server_info = {}
-    s = Storage('server_info.json',server_info)
+    server_info = {"DB_INIT" : 0}
+
+    s = Storage('server_info.json', server_info)
+    db = Database(cursor)
+
     s.initiate_storage
+
+    if s.get_data("DB_INIT") == 1:
+        print("Database already initialized")
+    else:
+        db.initiate_db()
+        s.store({"DB_INIT": 1})
+
+
 
         
 class Storage:
@@ -37,19 +47,22 @@ class Storage:
         with open(self.server_info_path, 'w') as f:
             json.dump(data, f)
 
-    def get_data(self):
+    def get_data(self, key):
         with open(self.server_info_path, 'r') as f:
             data = json.load(f)
-        return data
+        return data[key]
 
-class db:
-    def initiate_db():
+class Database:
+    def __init__(self, cursor):
+        self.cursor = cursor
+
+    def initiate_db(self):
         sql_command = """CREATE TABLE emp (
         UUID VARCHAR(36),
         username VARCHAR(50),
         password VARCHAR(50)
         );"""
-        cursor.execute(sql_command)
+        self.cursor.execute(sql_command)
         print("DATABASE INITIATED")
 
 class User:
