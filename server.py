@@ -5,6 +5,7 @@ import uuid
 import sqlite3
 import os
 import json
+import hashlib
 
 app = Flask(__name__)
 socketio = SocketIO(app)
@@ -27,8 +28,44 @@ def init():
         s.store({"DB_INIT": 1})
 
 
+class Account:
 
+    sessions = {}
+
+    def create_account(data):
+        id = str(uuid.uuid1())
+        password = Account.encrypt_password(data["password"])
+        Database.insert_user(id, data["username"], password)
+        return str("Account created. " + " Username: " + data["username"] + " Password: " + data["password"])
+    
+    def encrypt_password(password):
+        encoded_string = password.encode()
+        sha256_hash = hashlib.sha256()
+        sha256_hash.update(encoded_string)
+        result = str(sha256_hash.hexdigest())
         
+        return result
+
+    def login(request):
+        if not Account.verify_account(request["username"], request["password"]):
+            return {"ERROR" : "Incorrect account info"}
+        id = Database.get_id_by_username(request["username"])
+        return Account.create_session(id)
+
+    def create_session(id):
+        sessionID = str(uuid.uuid1())
+        Account.sessions[sessionID] = id
+        response = {"id": id,
+                    "sessionID": sessionID}
+        return response
+
+    def confirm_session(id, sessionID):
+        return Account.sessions[sessionID] == id
+
+    def verify_account(username, password):
+        dbPassword = Database.get_password_by_username(username)
+        return Account.encrypt_password(password) == dbPassword
+
 class Storage:
 
     def __init__(self, server_info_path, server_info):
@@ -64,6 +101,48 @@ class Database:
         );"""
         self.cursor.execute(sql_command)
         print("DATABASE INITIATED")
+
+    def insert_user(id,username,password):
+        cursor.execute("INSERT INTO emp VALUES (?, ?, ?)", (id, username, password))
+        print("New account added to database!")
+        connection.commit()
+
+    def print_db():
+        cursor.execute("SELECT * FROM emp")
+        ans = cursor.fetchall()
+        res = {}
+        for row in ans:
+            res[row[0]] = {"UUID": row[1], "username": row[2], "password": row[3]}
+        return res
+
+    def exists(id="",username=""):
+        cursor.execute("""SELECT UUID
+                            ,username
+                    FROM emp
+                    WHERE UUID=?
+                        OR username=?""",
+                    (id, username))
+        
+        result = cursor.fetchone()
+        return result
+
+    def get_id_by_username(username):
+        cursor.execute("SELECT UUID FROM emp WHERE username = ?",(username,))
+        
+        result = cursor.fetchone()
+        if result:
+            res = result[0]
+            return res
+        return None
+
+    def get_password_by_username(username):
+        cursor.execute("SELECT password FROM emp WHERE username = ?",(username,))
+        
+        result = cursor.fetchone()
+        if result:
+            res = result[0]
+            return res
+        return None
 
 class User:
     def __init__(self, user_id, username):
@@ -104,6 +183,7 @@ class Lobby:
                 self.isActive = False
 
 class LobbySystem:
+
     def __init__(self):
         self.lobbies = {}
 
@@ -137,7 +217,16 @@ def serializeLobbySystem(lobbySystem):
 @app.route('/', methods=['GET'])
 def main():
     print("Hello")
+    print(Database.exists("","Gwizz"))
     return "SyncStream Online"
+
+@app.route('/account', methods=['GET', 'POST'])
+def create_account():
+    return Account.create_account(request.json)
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    return Account.login(request.json)
 
 init()
 
