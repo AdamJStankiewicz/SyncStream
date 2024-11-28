@@ -167,15 +167,8 @@
                 loginContainer.classList.remove('hidden');
             });
 
-            // maybe remove after? this is here to help with debugging and flowing between containers.
-             // Return to Login page
-             partyReturnLoginButton.addEventListener('click', () => {
-                partyContainer.classList.add('hidden');
-                loginContainer.classList.remove('hidden');
-            });
-
-            // Navigate to Party page
-            loginButton.addEventListener('click', () => {
+             // Navigate to Party page
+             loginButton.addEventListener('click', () => {
                 loginContainer.classList.add('hidden');
                 partyContainer.classList.remove('hidden');
             });
@@ -186,6 +179,12 @@
                 // need to add logic to create a unique partID
             });
 
+            // maybe remove after? this is here to help with debugging and flowing between containers.
+             // Return to Login page
+             partyReturnLoginButton.addEventListener('click', () => {
+                partyContainer.classList.add('hidden');
+                loginContainer.classList.remove('hidden');
+            });
 
             // Join a Party
             joinPartyButton.addEventListener('click', () => {
