@@ -1,0 +1,6 @@
+api key: AIzaSyApjUYQS3sh6wITTjYZuACIa7or7T9Vdok
+
+test video1: https://www.youtube.com/watch?v=jfKfPfyJRdk
+
+test video2: https://www.youtube.com/watch?v=QW0u2sajpQ0&t=10037s
+

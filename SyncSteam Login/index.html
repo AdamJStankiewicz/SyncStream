@@ -126,15 +126,29 @@
         </div> 
     </div>
 
-    <!-- Test Party Container -->
-    <div class="container hidden" id="test-party-container">
-        <h1 class="header">Welcome to Party 1234</h1>
-        <p>Enter URL Bar</p>
-        <p>Video</p>
-        <p>Queue List with snippet or icon</p>
-        <p>Chat?</p>
-        <button id="return-party-button">Return to Party Page</button>
-    </div>
+  <!-- Test Party Container -->
+<div class="container hidden" id="test-party-container">
+    <h1 class="header">Welcome to Party 1234</h1>
+    
+    <!-- Search for YouTube Videos -->
+    <input type="text" id="search-query" placeholder="Search YouTube videos..." />
+    <button id="search-button">Search</button>
+    <div id="search-results"></div> <!-- Placeholder for search results -->
+
+    <!-- Paste YouTube URL -->
+    <input type="text" id="youtube-url" placeholder="Paste YouTube URL here" />
+    <button id="submit-url">Submit URL</button>
+    <p id="video-id-display">Video ID: None</p>
+    <div id="video-player-container"></div> <!-- Placeholder for video player -->
+
+    <p>Queue List with snippet or icon</p>
+    <p>Chat?</p>
+    <button id="return-party-button">Return to Party Page</button>
+</div>
+
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="youtube-search.js"></script>
+<script src="youtube-api.js"></script>
 
     <!--Java Script-->
     <script>
@@ -230,7 +244,7 @@
             });
 
         // Test Part Container 
-               const testPartyContainer = document.getElementById('test-party-container');
+            const testPartyContainer = document.getElementById('test-party-container');
         // Test Part Container Buttons
             const returnPartyButton = document.getElementById('return-party-button');
             
