@@ -1,17 +1,16 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SyncStream Login</title>
+    <title>SyncStream</title>
     <style>
-
-        .header{
+        /* Header styles for the main title */
+        .header {
             color: #fcfcfcf9;
             font-style: italic;
         }
-
+        /* Styles for the body to center content and apply a dark theme */
         body {
             font-family: 'Roboto', sans-serif;
             background-color: #040404;
@@ -21,7 +20,7 @@
             height: 100vh;
             margin: 0;
         }
-
+        /* Container styles for each page section */
         .container {
             background-color: #3e3e3e;
             padding: 20px;
@@ -30,15 +29,21 @@
             width: 500px;
             text-align: center;
         }
+        /* Class to hide inactive containers */
+        .hidden {
+            display: none;
+        }
 
-        input[type="text"], input[type="password"] {
+        /* Input styles for text, password, and email fields */
+        input[type="text"], input[type="password"], input[type="email"] {
             width: 50%;
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #a6a6a6;
             border-radius: 4px;
         }
-
+        
+        /* Button styles*/
         button {
             background-color: #61C1F3;
             color: rgb(3, 3, 3);
@@ -47,52 +52,161 @@
             border-radius: 4px;
             cursor: pointer;
         }
-
+        
+        /* Button hover effect */
         button:hover {
             background-color: #FD7426;
         }
 
+        /* Style for message text below buttons */
         .message {
             margin-top: 20px;
             font-size: 1.2em;
             color: #fefefef9;
             font-style: italic;
         }
-        
-        img{
-            width: 200px;
-            float: center;
-        }
 
+         /* Image size for the SyncStream icon */
+        img {
+            width: 200px;
+        }
     </style>
+    
 </head>
 <body>
-
-    <div class="container" id="Login Container">
+    <!--<form> element is used to create a container for collecting and submitting user input to a server.-->
+    <!--<div> element is a generic container used to group other elements for styling or layout purposes.-->
+    
+    <!-- Login Container -->
+    <div class="container" id="login-container">
         <h1 class="header">SyncStream</h1>
-        <img src="images/SyncStream-icon.png" alt="">
-        <form action="/login" method="post">
+        <img src="images/SyncStream-icon.png" alt="SyncStream Icon">
+        <form>
+            <!-- Username and Password input fields -->
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Login</button>
         </form>
+        <!-- Login button -->
+        <button type="button" id="login-button">Login</button>
+        <!-- Button to navigate to the Create Account page -->
+        <button id="create-account-button">Create an Account</button>
         <div class="message">
             "Come sync with us"
         </div>   
     </div>
 
-    <!--We have to figure out how to do a transition between containers using java script-->
-    <!--running this without comments will cause a side by side display..-->
-    <!--We want to log in and then automatically have the container update to say Join Part or host party-->
-    <!--must have a place to enter key and a place to generate-->
-    <!--
-    <div class="container hidden" id="party-container">
-        <h1>Host or Join a Party</h1>
-        <button id="host-button">Host Party</button>
-        <button id="join-button">Join Party</button>
+    <!-- Create Account Container -->
+    <div class="container hidden" id="create-account-container">
+        <h1 class="header">SyncStream</h1>
+        <img src="images/SyncStream-icon.png" alt="SyncStream Icon">
+        <form>
+            <!-- Input fields for account creation -->
+            <input type="text" name="first-name" placeholder="First Name" required>
+            <input type="email" name="email" placeholder="Email Address" required>
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="password" name="confirm-password" placeholder="Confirm Password" required>
+            <!--Need to figure out submit to server, and if then for password confirmation-->
+        </form>   
+        <button id="submit-account-button">Create Account</button> <!-- Submit account creation -->
+        <button id="return-login-button">Return to Login</button> <!-- Return to Login page -->
     </div>
-    -->
- 
-    
+
+    <!-- Party Container -->
+    <div class="container hidden" id="party-container">
+        <h1 class="header">SyncStream Party</h1>
+        <img src="images/SyncStream-icon.png" alt="SyncStream Icon">
+        <form>
+           <div>
+                <input type="text" id="party-id" placeholder="Enter Party ID" required>
+           </div> 
+           <!-- generated host partyId needs to get generated and sent to server?-->
+            <button id="host-party-button">Host Party</button>  <!-- Start hosting a party -->
+            <button id="join-party-button">Join Party</button> <!-- Join an existing party / validate with server?-->
+            <button id="party-return-login-button">Return to Login</button>
+        </form>
+    </div>
+
+    <!-- Test Party Container -->
+    <div class="container hidden" id="test-party-container">
+        <h1 class="header">Welcome to Party 1234</h1>
+        <p>Enter URL Bar</p>
+        <p>Video</p>
+        <p>Queue List with snippet or icon</p>
+        <p>Chat?</p>
+        <button id="return-party-button">Return to Party Page</button>
+    </div>
+
+    <script>
+        // () => or function()
+        document.addEventListener('DOMContentLoaded', () => {
+            // Select containers
+            const loginContainer = document.getElementById('login-container');
+            const createAccountContainer = document.getElementById('create-account-container');
+            const partyContainer = document.getElementById('party-container');
+            const testPartyContainer = document.getElementById('test-party-container');
+            
+            // Select buttons
+            const createAccountButton = document.getElementById('create-account-button');
+            const returnLoginButton = document.getElementById('return-login-button');
+            const partyReturnLoginButton = document.getElementById('party-return-login-button');
+            const loginButton = document.getElementById('login-button');
+            const hostPartyButton = document.getElementById('host-party-button');
+            const joinPartyButton = document.getElementById('join-party-button');
+            const returnPartyButton = document.getElementById('return-party-button');
+
+            // Show Create Account page
+            createAccountButton.addEventListener('click', () => {
+                loginContainer.classList.add('hidden');
+                createAccountContainer.classList.remove('hidden');
+            });
+
+            // Return to Login page
+            returnLoginButton.addEventListener('click', () => {
+                createAccountContainer.classList.add('hidden');
+                loginContainer.classList.remove('hidden');
+            });
+
+            // maybe remove after? this is here to help with debugging and flowing between containers.
+             // Return to Login page
+             partyReturnLoginButton.addEventListener('click', () => {
+                partyContainer.classList.add('hidden');
+                loginContainer.classList.remove('hidden');
+            });
+
+            // Navigate to Party page
+            loginButton.addEventListener('click', () => {
+                loginContainer.classList.add('hidden');
+                partyContainer.classList.remove('hidden');
+            });
+
+            // Host a Party
+            hostPartyButton.addEventListener('click', () => {
+                alert('Hosting a party...');
+                // need to add logic to create a unique partID
+            });
+
+
+            // Join a Party
+            joinPartyButton.addEventListener('click', () => {
+                const partyId = document.getElementById('party-id').value;
+                if (partyId === '1234') {
+                    partyContainer.classList.add('hidden');
+                    testPartyContainer.classList.remove('hidden');
+                } else if (partyId) {
+                    alert(`Joining party with ID: SHOW Generated ID`); //need to add code to generate ID
+                    
+                } else {
+                    alert('Please enter a Party ID');
+                }
+            });
+
+            // Return to Party Page
+            returnPartyButton.addEventListener('click', () => {
+                testPartyContainer.classList.add('hidden');
+                partyContainer.classList.remove('hidden');
+            });
+        });
+    </script>
 </body>
 </html>
