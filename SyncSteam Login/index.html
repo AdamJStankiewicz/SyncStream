@@ -174,15 +174,44 @@
 
         // Host/Join Party Container 
             const partyContainer = document.getElementById('party-container');
+            
         // Host/Join Party Container Buttons
             const hostPartyButton = document.getElementById('host-party-button');
             const joinPartyButton = document.getElementById('join-party-button');
             const partyReturnLoginButton = document.getElementById('party-return-login-button');
+            
         // Host/Join Party Container Button Functions
-            hostPartyButton.addEventListener('click', () => {
+            
+            partyReturnLoginButton.addEventListener('click', () => {   // Return to Login page
+                partyContainer.classList.add('hidden');
+                loginContainer.classList.remove('hidden');
+            });
+            
+            joinPartyButton.addEventListener('click', () => {   // Join a Party //later change to validate partyID
+                const partyId = document.getElementById('party-id').value;
+                if (partyId === '1234') {
+                    partyContainer.classList.add('hidden');
+                    testPartyContainer.classList.remove('hidden');
+                } else if (partyId) {
+                    alert(`Invalid PartyID`); //need to add code to generate ID
+                    
+                } else {
+                    alert('Please enter a Party ID');
+                }
+            });
+            
+            hostPartyButton.addEventListener('click', () => {    // Host a Party //later change to validate partyID
 
             let partyIDx = Party_ID_Generator(8); 
 
+            const testPartyHeader = document.querySelector('#test-party-container .header'); // Select the header
+            testPartyHeader.textContent = `Welcome to Party ${partyIDx}`;                    //Dynamically Change Header to include party ID
+            
+            alert('Your PartyID is ' + partyIDx);
+            
+            partyContainer.classList.add('hidden');                                      //swap vis on containers
+            testPartyContainer.classList.remove('hidden'); 
+            
             // function to generate PartyID
             function Party_ID_Generator(length) {
             let result = '';
@@ -195,34 +224,13 @@
 
             return result;
             }
+ 
+           
 
-            alert('Your PartyID is ' + partyIDx);
-            });
-
-            });
-
-
-             // maybe remove after? this is here to help with debugging and flowing between containers.
-             partyReturnLoginButton.addEventListener('click', () => {   // Return to Login page
-                partyContainer.classList.add('hidden');
-                loginContainer.classList.remove('hidden');
-            });
-
-              joinPartyButton.addEventListener('click', () => {   // Join a Party //later change to validate partyID
-                const partyId = document.getElementById('party-id').value;
-                if (partyId == '1234') {
-                    partyContainer.classList.add('hidden');
-                    testPartyContainer.classList.remove('hidden');
-                } else if (partyId) {
-                    alert(`Invalid PartyID`); //need to add code to generate ID
-                    
-                } else {
-                    alert('Please enter a Party ID');
-                }
             });
 
         // Test Part Container 
-            const testPartyContainer = document.getElementById('test-party-container');
+               const testPartyContainer = document.getElementById('test-party-container');
         // Test Part Container Buttons
             const returnPartyButton = document.getElementById('return-party-button');
             
@@ -230,6 +238,11 @@
              returnPartyButton.addEventListener('click', () => {   // Return to Party Page
                 testPartyContainer.classList.add('hidden');
                 partyContainer.classList.remove('hidden');
+
+            });
+
+
+          
             });
 
         
