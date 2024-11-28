@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SyncStream</title>
+    <!--CSS-->
     <style>
         /* Header styles for the main title */
         .header {
@@ -35,12 +36,13 @@
         }
 
         /* Input styles for text, password, and email fields */
-        input[type="text"], input[type="password"], input[type="email"] {
+        input[type="text"], input[type="password"] {
             width: 50%;
             padding: 10px;
             margin: 10px 0;
             border: 1px solid #a6a6a6;
             border-radius: 4px;
+            
         }
         
         /* Button styles*/
@@ -102,7 +104,6 @@
         <form>
             <!-- Input fields for account creation -->
             <input type="text" name="first-name" placeholder="First Name" required>
-            <input type="email" name="email" placeholder="Email Address" required>
             <input type="text" name="username" placeholder="Username" required>
             <input type="password" name="password" placeholder="Password" required>
             <input type="password" name="confirm-password" placeholder="Confirm Password" required>
@@ -116,15 +117,13 @@
     <div class="container hidden" id="party-container">
         <h1 class="header">SyncStream Party</h1>
         <img src="images/SyncStream-icon.png" alt="SyncStream Icon">
-        <form>
            <div>
-                <input type="text" id="party-id" placeholder="Enter Party ID" required>
-           </div> 
+            <input type="text" id="party-id" placeholder="Enter Party ID" required>
+            <button id="join-party-button">Join Party</button> <!-- Join an existing party / validate with server?-->
            <!-- generated host partyId needs to get generated and sent to server?-->
             <button id="host-party-button">Host Party</button>  <!-- Start hosting a party -->
-            <button id="join-party-button">Join Party</button> <!-- Join an existing party / validate with server?-->
             <button id="party-return-login-button">Return to Login</button>
-        </form>
+        </div> 
     </div>
 
     <!-- Test Party Container -->
@@ -137,75 +136,103 @@
         <button id="return-party-button">Return to Party Page</button>
     </div>
 
+    <!--Java Script-->
     <script>
         // () => or function()
         document.addEventListener('DOMContentLoaded', () => {
-            // Select containers
+
+        // Login Container
             const loginContainer = document.getElementById('login-container');
-            const createAccountContainer = document.getElementById('create-account-container');
-            const partyContainer = document.getElementById('party-container');
-            const testPartyContainer = document.getElementById('test-party-container');
-            
-            // Select buttons
-            const createAccountButton = document.getElementById('create-account-button');
-            const returnLoginButton = document.getElementById('return-login-button');
-            const partyReturnLoginButton = document.getElementById('party-return-login-button');
+
+        // Login Container Buttons
             const loginButton = document.getElementById('login-button');
-            const hostPartyButton = document.getElementById('host-party-button');
-            const joinPartyButton = document.getElementById('join-party-button');
-            const returnPartyButton = document.getElementById('return-party-button');
+            const createAccountButton = document.getElementById('create-account-button');
 
-            // Show Create Account page
-            createAccountButton.addEventListener('click', () => {
-                loginContainer.classList.add('hidden');
-                createAccountContainer.classList.remove('hidden');
-            });
-
-            // Return to Login page
-            returnLoginButton.addEventListener('click', () => {
-                createAccountContainer.classList.add('hidden');
-                loginContainer.classList.remove('hidden');
-            });
-
-             // Navigate to Party page
-             loginButton.addEventListener('click', () => {
+        // Login Container Button Functions
+            loginButton.addEventListener('click', () => { // Login button navigates to Party page
                 loginContainer.classList.add('hidden');
                 partyContainer.classList.remove('hidden');
             });
 
-            // Host a Party
-            hostPartyButton.addEventListener('click', () => {
-                alert('Hosting a party...');
-                // need to add logic to create a unique partID
+            createAccountButton.addEventListener('click', () => { // Show Create Account page
+                loginContainer.classList.add('hidden');
+                createAccountContainer.classList.remove('hidden');
             });
 
-            // maybe remove after? this is here to help with debugging and flowing between containers.
-             // Return to Login page
-             partyReturnLoginButton.addEventListener('click', () => {
+        // Create Account Container 
+            const createAccountContainer = document.getElementById('create-account-container');
+
+        // Create Account Container Buttons
+            const returnLoginButton = document.getElementById('return-login-button');
+            const createAccount = document.getElementById('submit-account-button');
+
+        // Create Account Container Button Functions
+            returnLoginButton.addEventListener('click', () => {  // Return to Login page
+                createAccountContainer.classList.add('hidden');
+                loginContainer.classList.remove('hidden');
+            });
+
+        // Host/Join Party Container 
+            const partyContainer = document.getElementById('party-container');
+        // Host/Join Party Container Buttons
+            const hostPartyButton = document.getElementById('host-party-button');
+            const joinPartyButton = document.getElementById('join-party-button');
+            const partyReturnLoginButton = document.getElementById('party-return-login-button');
+        // Host/Join Party Container Button Functions
+            hostPartyButton.addEventListener('click', () => {
+
+            let partyIDx = Party_ID_Generator(8); 
+
+            // function to generate PartyID
+            function Party_ID_Generator(length) {
+            let result = '';
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+
+            for (let i = 0; i < length; i++) {   // Loop to generate characters for the specified length
+            const randGen = Math.floor(Math.random() * characters.length);
+            result += characters.charAt(randGen);
+            }
+
+            return result;
+            }
+
+            alert('Your PartyID is ' + partyIDx);
+            });
+
+            });
+
+
+             // maybe remove after? this is here to help with debugging and flowing between containers.
+             partyReturnLoginButton.addEventListener('click', () => {   // Return to Login page
                 partyContainer.classList.add('hidden');
                 loginContainer.classList.remove('hidden');
             });
 
-            // Join a Party
-            joinPartyButton.addEventListener('click', () => {
+              joinPartyButton.addEventListener('click', () => {   // Join a Party //later change to validate partyID
                 const partyId = document.getElementById('party-id').value;
-                if (partyId === '1234') {
+                if (partyId == '1234') {
                     partyContainer.classList.add('hidden');
                     testPartyContainer.classList.remove('hidden');
                 } else if (partyId) {
-                    alert(`Joining party with ID: SHOW Generated ID`); //need to add code to generate ID
+                    alert(`Invalid PartyID`); //need to add code to generate ID
                     
                 } else {
                     alert('Please enter a Party ID');
                 }
             });
 
-            // Return to Party Page
-            returnPartyButton.addEventListener('click', () => {
+        // Test Part Container 
+            const testPartyContainer = document.getElementById('test-party-container');
+        // Test Part Container Buttons
+            const returnPartyButton = document.getElementById('return-party-button');
+            
+        // Test Part Container Button Functions
+             returnPartyButton.addEventListener('click', () => {   // Return to Party Page
                 testPartyContainer.classList.add('hidden');
                 partyContainer.classList.remove('hidden');
             });
-        });
+
+        
     </script>
 </body>
 </html>
