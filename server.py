@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_socketio import SocketIO, emit
 import uuid
+from flask_cors import CORS
 
 import sqlite3
 import os
@@ -8,6 +9,7 @@ import json
 import hashlib
 
 app = Flask(__name__)
+CORS(app)
 socketio = SocketIO(app)
 
 connection = sqlite3.connect('syncstream.db', check_same_thread=False)
@@ -143,26 +145,44 @@ class Database:
             res = result[0]
             return res
         return None
+    
+    def get_username_by_userid(id):
+        cursor.execute("SELECT username FROM emp WHERE UUID = ?",(id,))
+        
+        result = cursor.fetchone()
+        if result:
+            res = result[0]
+            return res
+        return None
 
+    
+#Class for each user
 class User:
-    def __init__(self, user_id, username):
-        self.id = user_id
+    def __init__(self, user_id, username, is_host=False):
+        self.user_id = user_id
         self.username = username
+        self.is_host = is_host
 
+    def set_host(self, is_host):
+        self.is_host = is_host
+
+#Class for functions in the lobby
 class Lobby:
-    def __init__(self, lobbyId, host):
+    def __init__(self, lobbyId, host, lobbyCode):
         self.lobbyId = lobbyId
         self.host = host
+        self.lobbyCode = lobbyCode
         self.videoQueue = []
         self.currentVideo = None
-        self.participants = [host]
+        self.participants = {host.user_id: host}
         self.isActive = True
+        self.userTimes = {}
 
     def addVideoToQueue(self, user, videoUrl):
-        if user == self.host:
+        if user.is_host:
             self.videoQueue.append(videoUrl)
         else:
-            print("Error: " + user.username + " is not allowed to add videos to the queue.")
+            print(f"Error: User {user.user_id} is not allowed to add videos to the queue.")
 
     def playNextVideo(self):
         if self.videoQueue:
@@ -171,48 +191,67 @@ class Lobby:
             print("Error: no videos in the queue to play.")
 
     def join(self, user):
-        if user not in self.participants:
-            self.participants.append(user)
+        if user.user_id not in self.participants:
+            self.participants[user.user_id] = user
         else:
-            print("Error: " + user.username + " is already in the lobby.")
+            print(f"Error: User with sessionId {user.user_id} is already in the lobby.")
 
     def leave(self, user):
-        if user in self.participants:
-            self.participants.remove(user)
-            if user == self.host:
+        if user.user_id in self.participants:
+            removed_user = self.participants.pop(user.user_id)
+            if removed_user.is_host:
                 self.isActive = False
+                print(f"Host {user.user_id} left, lobby deactivated.")
+    
+    def timeStorage(self, user_id, currentTime):
+        self.userTimes[user_id] = currentTime
 
+
+#Class for setting up a lobby
 class LobbySystem:
-
     def __init__(self):
         self.lobbies = {}
 
     def createLobby(self, host):
         lobbyId = str(uuid.uuid4())
-        newLobby = Lobby(lobbyId, host)
-        self.lobbies[lobbyId] = newLobby
+        lobbyCode = self.generate_lobby_code()
+
+        while lobbyCode in self.lobbies:
+            lobbyCode = self.generate_lobby_code()
+
+        newLobby = Lobby(lobbyId, host, lobbyCode)
+        self.lobbies[lobbyCode] = newLobby
         return newLobby
 
-    def getLobby(self, lobbyId):
-        return self.lobbies.get(lobbyId)
+    def generate_lobby_code(self):
+        return ("123")
 
-    def deleteLobby(self, lobbyId):
-        if lobbyId in self.lobbies:
-            del self.lobbies[lobbyId]
+    def getLobby(self, lobbyCode):
+        return self.lobbies.get(lobbyCode)
+
+    def deleteLobby(self, lobbyCode):
+        if lobbyCode in self.lobbies:
+            del self.lobbies[lobbyCode]
+
+    def getAllLobbies(self):
+        serialized_lobbies = serializeLobbySystem(self)
+        return serialized_lobbies
 
 def serializeLobbySystem(lobbySystem):
     lobbiesData = {}
     for lobbyId, lobby in lobbySystem.lobbies.items():
         lobbiesData[lobbyId] = {
-            "host": lobby.host.username,
+            "host": lobby.host.user_id,  # Only userId here
             "videoQueue": lobby.videoQueue,
             "currentVideo": lobby.currentVideo,
-            "participants": [user.username for user in lobby.participants],
+            "participants": [user.user_id for user in lobby.participants.values()],  # Only userId here
             "isActive": lobby.isActive
         }
     
     return lobbiesData
+    
 
+lobby_system = LobbySystem()
 
 @app.route('/', methods=['GET'])
 def main():
@@ -224,10 +263,128 @@ def main():
 def create_account():
     return Account.create_account(request.json)
 
+
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     return Account.login(request.json)
 
+#Roue for when user creates a lobby
+@app.route('/lobby/create', methods=['GET', 'POST'])
+def create_lobby():
+    user_id = request.json["userId"]
+    username = Database.get_username_by_userid(user_id)
+
+    user = User(user_id, username, is_host=True)
+
+    new_lobby = lobby_system.createLobby(user)
+
+    return {
+        'lobbyId': new_lobby.lobbyId,
+        'lobbyCode': new_lobby.lobbyCode,
+        'host': {
+            'userId': new_lobby.host.user_id
+        },
+        'participants': [
+            {
+                'userId': participant.user_id,
+                'isHost': participant.is_host
+            } for participant in new_lobby.participants.values()
+        ],
+        'videoQueue': new_lobby.videoQueue,
+        'currentVideo': new_lobby.currentVideo,
+        'isActive': new_lobby.isActive}
+    
+#Route for when user joins a lobby
+@app.route('/lobby/join', methods=['GET', 'POST'])
+def join_lobby():
+    user_id = request.json["userId"]
+    lobby_code = request.json["lobbyCode"]
+    username = Database.get_username_by_userid(user_id)
+
+    lobby = lobby_system.getLobby(lobby_code)
+
+    user = User(user_id, username, is_host=False)
+    lobby.join(user)
+
+    return {
+        'lobbyId': lobby.lobbyId,
+        'lobbyCode': lobby.lobbyCode,
+        'host': {
+            'userId': lobby.host.user_id
+        },
+        'participants': [
+            {
+                'userId': participant.user_id,
+                'isHost': participant.is_host
+            } for participant in lobby.participants.values()
+        ],
+        'videoQueue': lobby.videoQueue,
+        'currentVideo': lobby.currentVideo,
+        'isActive': lobby.isActive
+    }
+
+#Route for each lobby
+@app.route('/lobby/<lobbyCode>', methods=['POST'])
+def get_lobby_state(lobbyCode):
+    lobby = lobby_system.getLobby(lobbyCode)
+
+    if lobby:
+        return {
+            'lobbyId': lobby.lobbyId,
+            'lobbyCode': lobby.lobbyCode,
+            'host': {
+                'userId': lobby.host.user_id
+            },
+            'participants': [
+                {
+                    'userId': participant.user_id,
+                    'isHost': participant.is_host
+                } for participant in lobby.participants.values()
+            ],
+            'videoQueue': lobby.videoQueue,
+            'currentVideo': lobby.currentVideo,
+            'isActive': lobby.isActive
+        }
+    else:
+        return {"error": "Lobby not found"}, 404
+
+
+#Route to get the host current youtube time
+@app.route('/lobby/<lobbyCode>/get_host_time', methods=['POST'])
+def get_host_time(lobbyCode):    
+    user_id = request.json["userId"]
+    host_time = request.json["hostTime"]
+
+    lobby = lobby_system.getLobby(lobbyCode)
+
+    lobby.timeStorage(user_id, host_time)
+
+    return {
+        'hostId': user_id,
+        'currentTime': host_time
+    }
+
+
+#Route to send the user the host current youtube time
+@app.route('/lobby/<lobbyCode>/send_host_time', methods=['POST'])
+def update_time(lobbyCode):
+    lobby = lobby_system.getLobby(lobbyCode)
+
+    host_id = lobby.host.user_id
+    
+    host_time = lobby.userTimes.get(host_id)
+
+    return {
+        'hostTime': host_time
+    }
+
+
+
+
+
 init()
 
 socketio.run(app,host='0.0.0.0',port=1477, allow_unsafe_werkzeug=True, debug=False)
+
+
+
