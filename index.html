@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SyncStream</title>
+    <!--CSS-->
+    <style>
+        /* Header styles for the main title */
+        .header {
+            color: #fcfcfcf9;
+            font-style: italic;
+        }
+        /* Styles for the body to center content and apply a dark theme */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #040404;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+        /* Container styles for each page section */
+        .container {
+            background-color: #3e3e3e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 500px;
+            text-align: center;
+        }
+        /* Class to hide inactive containers */
+        .hidden {
+            display: none;
+        }
+
+        /* Input styles for text, password, and email fields */
+        input[type="text"], input[type="password"] {
+            width: 50%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #a6a6a6;
+            border-radius: 4px;
+            
+        }
+        
+        /* Button styles*/
+        button {
+            background-color: #61C1F3;
+            color: rgb(3, 3, 3);
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        
+        /* Button hover effect */
+        button:hover {
+            background-color: #FD7426;
+        }
+
+        /* Style for message text below buttons */
+        .message {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #fefefef9;
+            font-style: italic;
+        }
+
+         /* Image size for the SyncStream icon */
+        img {
+            width: 200px;
+        }
+    </style>
+    
+</head>
+<body>
+    <!--<form> element is used to create a container for collecting and submitting user input to a server.-->
+    <!--<div> element is a generic container used to group other elements for styling or layout purposes.-->
+    
+    <!-- Login Container -->
+    <div class="container" id="login-container">
+        <h1 class="header">SyncStream</h1>
+        <img src="Images/SyncStream-icon.png" alt="SyncStream Icon">
+        <form>
+            <!-- Username and Password input fields -->
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+        </form>
+        <!-- Login button -->
+        <button type="button" id="login-button">Login</button>
+        <!-- Button to navigate to the Create Account page -->
+        <button id="create-account-button">Create an Account</button>
+        <div class="message">
+            "Come sync with us"
+        </div>   
+    </div>
+
+    <!-- Create Account Container -->
+    <div class="container hidden" id="create-account-container">
+        <h1 class="header">SyncStream</h1>
+        <img src="Images/SyncStream-icon.png" alt="SyncStream Icon">
+        <form>
+            <!-- Input fields for account creation -->
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="password" name="confirm-password" placeholder="Confirm Password" required>
+            <!--Need to figure out submit to server, and if then for password confirmation-->
+        </form>   
+        <button id="submit-account-button">Create Account</button> <!-- Submit account creation -->
+        <button id="return-login-button">Return to Login</button> <!-- Return to Login page -->
+    </div>
+
+    <!--Host/Join Party Container -->
+    <div class="container hidden" id="party-container">
+        <h1 class="header">SyncStream Party</h1>
+        <img src="Images/SyncStream-icon.png" alt="SyncStream Icon">
+           <div>
+            <input type="text" id="party-id" placeholder="Enter Party ID" required>
+            <button id="join-party-button">Join Party</button> <!-- Join an existing party / validate with server?-->
+           <!-- generated host partyId needs to get generated and sent to server?-->
+            <button id="host-party-button">Host Party</button>  <!-- Start hosting a party -->
+            <button id="party-return-login-button">Return to Login</button>
+        </div> 
+    </div>
+
+  <!-- Test Party Container -->
+<div class="container hidden" id="test-party-container">
+    <h1 class="header">Welcome to Party 1234</h1>
+    
+    <!-- Paste YouTube URL -->
+    <input type="text" id="youtube-url" placeholder="Paste YouTube URL here" />
+    <button id="submit-url">Queue It!</button>
+    <p id="video-id-display">Video ID: None</p>
+    <div id="video-player-container"></div> <!-- Placeholder for video player -->
+
+    <p>Queue List with snippet or icon</p>
+    <p>Chat?</p>
+    <button id="return-party-button">Return to Party Page</button>
+</div>
+
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="youtube-api.js"></script>
+
+    <!--Java Script-->
+    <script>
+        // () => or function()
+        document.addEventListener('DOMContentLoaded', () => {
+
+        // Login Container
+            const loginContainer = document.getElementById('login-container');
+
+        // Login Container Buttons
+            const loginButton = document.getElementById('login-button');
+            const createAccountButton = document.getElementById('create-account-button');
+
+        // Login Container Button Functions
+            loginButton.addEventListener('click', async function () {
+                const username = document.querySelector("input[name='username']").value;
+                const password = document.querySelector("input[name='password']").value;
+
+                try {
+                    const response = await fetch("http://127.0.0.1:1477/login", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ username, password }),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.ERROR || "Login failed");
+                    }
+
+                    const data = await response.json();
+                    localStorage.clear();
+                    // Save session data to localStorage
+                    const userSessionData = {
+                        sessionID: data.sessionID,
+                        userID: data.id,
+                    };
+                    localStorage.setItem("userSession", JSON.stringify(userSessionData));
+
+                    loginContainer.classList.add("hidden");
+                    partyContainer.classList.remove("hidden");
+                } 
+                catch (error) {
+                    messageDiv.textContent = error.message;
+                    console.error("Error:", error);
+                }
+            });
+        
+        
+            const createAccount = document.getElementById('submit-account-button');
+
+            createAccountButton.addEventListener('click', () => {
+                loginContainer.classList.add('hidden');
+                createAccountContainer.classList.remove('hidden');
+            });
+
+            // This is adding it to the database but still returning an error CHECK THIS OUT
+            createAccount.addEventListener('click', async () => {
+                const username = document.querySelector("#create-account-container input[name='username']").value;
+                const password = document.querySelector("#create-account-container input[name='password']").value;
+                const confirmPassword = document.querySelector("#create-account-container input[name='confirm-password']").value;
+
+                if (password !== confirmPassword) {
+                    alert("Passwords do not match. Please try again.");
+                    return;
+                }
+
+                try {
+                    const response = await fetch("http://127.0.0.1:1477/account", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ username, password }),
+                    });
+
+                    const rawResponse = await response.text();
+                    console.log("Raw Response:", rawResponse);
+
+                    if (!response.ok) {
+                        const errorData = JSON.parse(rawResponse);
+                        throw new Error(errorData.ERROR || "Account creation failed");
+                    }
+
+                    const data = JSON.parse(rawResponse);
+                    alert("Account created successfully. Please log in.");
+                    createAccountContainer.classList.add('hidden');
+                    loginContainer.classList.remove('hidden');
+                } 
+                catch (error) {
+                    console.error("Error:", error);
+                    alert("An error occurred: " + error.message);
+                }
+
+            });
+
+
+                /*
+
+            createAccountButton.addEventListener('click', () => { // Show Create Account page
+                loginContainer.classList.add('hidden');
+                createAccountContainer.classList.remove('hidden');
+
+            });
+
+            createAccount.addEventListener('click', async function () {
+
+                const username = document.querySelector("input[name='username']").value;
+                const password = document.querySelector("input[name='password']").value;
+                const confirmPassword = document.querySelector("input[name='confirm-password']").value;
+
+                // Check if passwords match before sending to backend
+                if (password !== confirmPassword) {
+                    alert("Passwords do not match. Please try again.");
+                    return;
+                }
+
+                try {
+                    // Send data to the backend
+                    const response = await fetch("http://127.0.0.1:1477/account", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ username, password }),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.ERROR || "Account creation failed");
+                    }
+
+                    const data = await response.json();
+                    console.log("Account created successfully:", data);
+
+                    // Optionally store session data or redirect user
+                    alert("Account created successfully. Please log in.");
+                    loginContainer.classList.add('hidden');
+                    createAccountContainer.classList.remove('hidden');
+                    } 
+                    catch (error) {
+                    console.error("Error:", error);
+                    alert(error.message);
+                }
+            });
+             
+*/
+
+
+        // Create Account Container 
+            const createAccountContainer = document.getElementById('create-account-container');
+
+        // Create Account Container Buttons
+            const returnLoginButton = document.getElementById('return-login-button');
+            //const createAccount = document.getElementById('submit-account-button');
+
+        // Create Account Container Button Functions
+            returnLoginButton.addEventListener('click', () => {  // Return to Login page
+                createAccountContainer.classList.add('hidden');
+                loginContainer.classList.remove('hidden');
+            });
+
+        // Host/Join Party Container 
+            const partyContainer = document.getElementById('party-container');
+            
+        // Host/Join Party Container Buttons
+            const hostPartyButton = document.getElementById('host-party-button');
+            const joinPartyButton = document.getElementById('join-party-button');
+            const partyReturnLoginButton = document.getElementById('party-return-login-button');
+            
+        // Host/Join Party Container Button Functions
+            
+            partyReturnLoginButton.addEventListener('click', () => {   // Return to Login page
+                partyContainer.classList.add('hidden');
+                loginContainer.classList.remove('hidden');
+            });
+            
+            
+            
+            
+            
+            
+            
+            joinPartyButton.addEventListener('click', async () => {
+                const partyId = document.getElementById('party-id').value;
+                
+                const userSessionData = JSON.parse(localStorage.getItem("userSession"));
+                
+
+
+                if (partyId) {
+                    try {
+                        // Send a request to the backend to join the lobby
+                        const response = await fetch("http://127.0.0.1:1477/lobby/join", {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                            },
+                            body: JSON.stringify({
+                                userId: userSessionData.userID,
+                                lobbyCode: partyId,
+                            }),
+                        });
+
+                        if (!response.ok) {
+                            const errorData = await response.json();
+                            throw new Error(errorData.ERROR || "Failed to join lobby");
+                        }
+
+                        const data = await response.json();
+
+                        // Save the lobby code to localStorage
+                        localStorage.setItem("lobbyCode", partyId);
+
+                        // Switch containers and update UI
+                        const testPartyHeader = document.querySelector('#test-party-container .header');
+                        testPartyHeader.textContent = `Welcome to Party ${partyId}`;
+
+                        alert(`You have successfully joined Party ${partyId}`);
+
+                        // Hide the party container and show the test party container
+                        partyContainer.classList.add('hidden');
+                        testPartyContainer.classList.remove('hidden');
+
+                    } 
+                    catch (error) {
+                        console.error("Error:", error);
+                        alert("An error occurred while joining the lobby. Please try again.");
+                    }
+                } 
+                else {
+                    alert('Please enter a Party ID');
+                }
+            });
+
+            
+            
+            
+            
+            
+            
+
+/*
+            
+            
+            hostPartyButton.addEventListener('click', () => {    // Host a Party //later change to validate partyID
+
+                const testPartyHeader = document.querySelector('#test-party-container .header'); // Select the header
+                testPartyHeader.textContent = `Welcome to Party ${partyIDx}`;
+                
+                alert('Your PartyID is ' + partyIDx);
+                
+                partyContainer.classList.add('hidden');
+                testPartyContainer.classList.remove('hidden'); 
+
+            });
+
+*/
+
+            hostPartyButton.addEventListener('click', async () => {
+
+                const userSessionData = JSON.parse(localStorage.getItem("userSession"));
+
+
+                try {
+                    const response = await fetch("http://127.0.0.1:1477/lobby/create", {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ userId: userSessionData.userID }),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.error('Error response from server:', errorData);
+                        throw new Error(errorData.ERROR || "Failed to create lobby");
+                    }
+
+                    const data = await response.json();
+
+                    const { lobbyCode } = data;
+
+                    // Save the lobby code to localStorage
+                    localStorage.setItem("lobbyCode", lobbyCode);
+
+                    const testPartyHeader = document.querySelector('#test-party-container .header');
+                    testPartyHeader.textContent = `Welcome to Party ${lobbyCode}`;
+
+                    alert(`Your Party ID is ${lobbyCode}`);
+
+                    partyContainer.classList.add('hidden');
+                    testPartyContainer.classList.remove('hidden');
+                    console.log('Switched to test party container');
+                } 
+                catch (error) {
+                    console.error("Error:", error);
+                    alert("An error occurred while creating the lobby. Please try again.");
+                }
+            });
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // Test Part Container 
+            const testPartyContainer = document.getElementById('test-party-container');
+        // Test Part Container Buttons
+            const returnPartyButton = document.getElementById('return-party-button');
+            
+        // Test Part Container Button Functions
+             returnPartyButton.addEventListener('click', () => {   // Return to Party Page
+                testPartyContainer.classList.add('hidden');
+                partyContainer.classList.remove('hidden');
+
+            });
+
+
+          
+            });
+
+        
+    </script>
+</body>
+</html>
