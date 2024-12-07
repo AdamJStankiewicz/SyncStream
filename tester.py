@@ -33,7 +33,7 @@ def login():
 def createLobby():
     url = "http://127.0.0.1:1477/lobby/create"
     
-    data = {"userId": "9dd02531-af61-11ef-8b66-086ac515207e"}
+    data = {"userId": "ff123a8b-b449-11ef-82a9-28d0ea7d6477"}
     
     headers = {
         "Content-Type": "application/json"
@@ -112,8 +112,24 @@ def sendHostTime():
     print(json)
 
 
-createLobby()
+def addVideoToQueue():
+    url = "http://127.0.0.1:1477/lobby/123/add_to_queue"
 
+    data = {"video": "YGcoiRkei4s"}
+
+    headers = {
+        "Content-Type": "application/json"
+    }
+
+    response = requests.post(url,json=data,headers=headers)
+    json = response.json()
+
+    print(json)
+
+#createLobby()
+#create_account()
+
+addVideoToQueue()
 
 #8a9b7061-af52-11ef-92c9-086ac515207e
 

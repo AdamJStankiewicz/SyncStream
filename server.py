@@ -178,17 +178,18 @@ class Lobby:
         self.isActive = True
         self.userTimes = {}
 
-    def addVideoToQueue(self, user, videoUrl):
-        if user.is_host:
-            self.videoQueue.append(videoUrl)
-        else:
-            print(f"Error: User {user.user_id} is not allowed to add videos to the queue.")
+    def addVideoToQueue(self, videoUrl):
+        self.videoQueue.append(videoUrl)
+
+    def getVideoQueue(self):
+        return self.videoQueue
 
     def playNextVideo(self):
         if self.videoQueue:
             self.currentVideo = self.videoQueue.pop(0)
         else:
             print("Error: no videos in the queue to play.")
+
 
     def join(self, user):
         if user.user_id not in self.participants:
@@ -259,6 +260,10 @@ def main():
     print(Database.exists("","Gwizz"))
     return "SyncStream Online"
 
+@app.route('/get_userID/<username>')
+def get_userID(username):
+    return Database.get_id_by_username(username)
+
 @app.route('/account', methods=['GET', 'POST'])
 def create_account():
     return Account.create_account(request.json)
@@ -268,7 +273,7 @@ def create_account():
 def login():
     return Account.login(request.json)
 
-#Roue for when user creates a lobby
+#Route for when user creates a lobby
 @app.route('/lobby/create', methods=['GET', 'POST'])
 def create_lobby():
     user_id = request.json["userId"]
@@ -378,7 +383,16 @@ def update_time(lobbyCode):
         'hostTime': host_time
     }
 
+@app.route('/lobby/<lobbyCode>/add_to_queue', methods=['POST'])
+def add_to_queue(lobbyCode):
+    lobby = lobby_system.getLobby(lobbyCode)
+    video = request.json["video"]
 
+    lobby.addVideoToQueue(video)
+
+    return {
+        'lobbyQueue' : lobby.getVideoQueue()
+    }
 
 
 
