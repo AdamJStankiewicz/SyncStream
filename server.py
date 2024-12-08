@@ -197,13 +197,14 @@ class Lobby:
         else:
             print(f"Error: User with sessionId {user.user_id} is already in the lobby.")
 
-    def leave(self, user):
-        if user.user_id in self.participants:
-            removed_user = self.participants.pop(user.user_id)
+    def disconnect(self, userID):
+        if userID in self.participants:
+            removed_user = self.participants.pop(userID)
             if removed_user.is_host:
                 self.isActive = False
-                print(f"Host {user.user_id} left, lobby deactivated.")
-    
+                print(f"Host {userID} left, lobby deactivated.")
+
+
     def timeStorage(self, user_id, currentTime):
         self.userTimes[user_id] = currentTime
 
@@ -394,6 +395,16 @@ def add_to_queue(lobbyCode):
         'lobbyQueue' : lobby.getVideoQueue()
     }
 
+@app.route('/lobby/<lobbyCode>/disconnect_user', methods=['POST'])
+def disconnect_user(lobbyCode):
+    lobby = lobby_system.getLobby(lobbyCode)
+    userID = request.json["userId"]
+
+    lobby.disconnect(userID)
+
+    return {
+        'user_removed' : userID
+    }
 
 
 init()
