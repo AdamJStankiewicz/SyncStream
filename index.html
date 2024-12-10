@@ -8,72 +8,151 @@
     <style>
         /* Header styles for the main title */
         .header {
-            color: #fcfcfcf9;
-            font-style: italic;
-        }
-        /* Styles for the body to center content and apply a dark theme */
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #040404;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        /* Container styles for each page section */
-        .container {
-            background-color: #3e3e3e;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 500px;
-            text-align: center;
-        }
-        /* Class to hide inactive containers */
-        .hidden {
-            display: none;
-        }
-
-        /* Input styles for text, password, and email fields */
-        input[type="text"], input[type="password"] {
-            width: 50%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid #a6a6a6;
-            border-radius: 4px;
-            
-        }
+        color: #fcfcfcf9;
+        font-style: italic;
+    }
+    /* Styles for the body to center content and apply a dark theme */
+    body {
+        font-family: 'Roboto', sans-serif;
+        background-color: #040404;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    /* Container styles for each page section */
+    .container {
         
-        /* Button styles*/
-        button {
-            background-color: #61C1F3;
-            color: rgb(3, 3, 3);
-            padding: 10px 15px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
+        background-color: #3e3e3e;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 550px;
+        text-align: center;
+        flex-direction: row;
+  
         
-        /* Button hover effect */
-        button:hover {
-            background-color: #FD7426;
-        }
+    }
 
-        /* Style for message text below buttons */
-        .message {
-            margin-top: 20px;
-            font-size: 1.2em;
-            color: #fefefef9;
-            font-style: italic;
-        }
-
-         /* Image size for the SyncStream icon */
-        img {
-            width: 200px;
-        }
-    </style>
     
+    .container .media-box {
+        position: relative; /* Enable absolute positioning for children */
+        width: 100%; 
+        height: 100%; 
+        margin: auto;
+        background-color: #444; 
+        border-radius: 10px;
+        overflow: hidden; /* Prevent children from overflowing */
+        }
+
+     .video-container {
+           position: absolute; /* Allow free placement */
+           top: 0%; 
+           left: 0%;
+           width: 300px; /* Adjust as needed */
+           height: 315px; /* Fixed height for the video */
+           background-color: #f0f0f0; /* Optional background color */
+           border: 2px solid #ddd;
+           border-radius: 10px;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           position: relative;
+        }
+
+        #video-player-container iframe {
+     
+           border: 2px solid #ddd;
+           border-radius: 10px;
+        }
+
+  
+
+  .lobby {
+        position: absolute; /* Allow free placement */
+        top: 51%; /* Adjust position */
+        left: 59%;  
+        width: 200px;
+        height: 140px;
+        background-color: #007BFF;
+        border: 2px solid #0056b3;
+        border-radius: 5px;
+     
+        
+        }
+
+        #lobby-users-list {
+        list-style-type: none; 
+        padding: 0; 
+        margin: 0; /* Removes default margin */
+    }
+        
+
+      .playlist {
+        position: absolute; /* Allow free placement */
+        top: 0%; 
+        left: 59%;  
+        width: 200px;
+        height: 140px;
+        background-color: #007BFF;
+        border: 2px solid #0056b3;
+        border-radius: 5px;
+        }
+
+        #playlist-queue {
+        list-style-type: none; 
+        padding: 0; 
+        margin: 0; 
+    }
+
+    
+
+    /* Class to hide inactive containers */
+    .hidden {
+        display: none;
+    }
+
+    /* Input styles for text, password, and email fields */
+    input[type="text"], input[type="password"] {
+        width: 50%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #a6a6a6;
+        border-radius: 4px;
+        
+    }
+    
+    /* Button styles*/
+    button {
+        background-color: #61C1F3;
+        color: rgb(3, 3, 3);
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    /* Button hover effect */
+    button:hover {
+        background-color: #FD7426;
+    }
+
+    /* Style for message text below buttons */
+    .message {
+        margin-top: 20px;
+        font-size: 1.2em;
+        color: #fefefef9;
+        font-style: italic;
+    }
+
+     /* Image size for the SyncStream icon */
+    img {
+        width: 200px;
+    }
+
+</style>
+
 </head>
 <body>
     <!--<form> element is used to create a container for collecting and submitting user input to a server.-->
@@ -125,23 +204,44 @@
         </div> 
     </div>
 
-  <!-- Test Party Container -->
+<!-- Party Container -->
 <div class="container hidden" id="test-party-container">
     <h1 class="header">Welcome to Party 1234</h1>
-    
-    <!-- Paste YouTube URL -->
+<!-- Paste YouTube URL -->
     <input type="text" id="youtube-url" placeholder="Paste YouTube URL here" />
-    <button id="submit-url">Queue It!</button>
+    <button id="submit-url">Queue it!</button>
     <p id="video-id-display">Video ID: None</p>
-    <div id="video-player-container"></div> <!-- Placeholder for video player -->
 
-    <p>Queue List with snippet or icon</p>
-    <p>Chat?</p>
-    <button id="return-party-button">Return to Party Page</button>
+    <!--<div id="video-player-container"></div> --><!-- Placeholder for video player --> 
+
+    <div class="media-box">
+<!-- Video Container --> 
+    <div class="video-container">
+    <div id="video-player-container"></div> <!-- Placeholder for video player -->
+    </div>
+
+
+<!-- Lobby Section --> 
+ <div class="lobby">
+    <strong>Lobby:</strong>
+    <ul id="lobby-users-list"> <!--CALL THIS-->
+        <li>Waiting for server data...</li>
+    </ul>
 </div>
 
+<!-- Playlist Section -->
+<div class="playlist">
+    <strong>Playlist:</strong>
+    <ul id="playlist-queue">    <!--CALL THIS-->
+        <li>Waiting for server data...</li>
+    </ul>
+</div>
+</div>
+<button id="return-party-button">Return to Party Page</button>
+</div>
+
+
 <script src="https://apis.google.com/js/api.js"></script>
-<script src="youtube-api.js"></script>
 
     <!--Java Script-->
     <script>
@@ -200,7 +300,7 @@
                 createAccountContainer.classList.remove('hidden');
             });
 
-            // This is adding it to the database but still returning an error CHECK THIS OUT
+
             createAccount.addEventListener('click', async () => {
                 const username = document.querySelector("#create-account-container input[name='username']").value;
                 const password = document.querySelector("#create-account-container input[name='password']").value;
@@ -240,57 +340,6 @@
 
             });
 
-
-                /*
-
-            createAccountButton.addEventListener('click', () => { // Show Create Account page
-                loginContainer.classList.add('hidden');
-                createAccountContainer.classList.remove('hidden');
-
-            });
-
-            createAccount.addEventListener('click', async function () {
-
-                const username = document.querySelector("input[name='username']").value;
-                const password = document.querySelector("input[name='password']").value;
-                const confirmPassword = document.querySelector("input[name='confirm-password']").value;
-
-                // Check if passwords match before sending to backend
-                if (password !== confirmPassword) {
-                    alert("Passwords do not match. Please try again.");
-                    return;
-                }
-
-                try {
-                    // Send data to the backend
-                    const response = await fetch("http://127.0.0.1:1477/account", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ username, password }),
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.ERROR || "Account creation failed");
-                    }
-
-                    const data = await response.json();
-                    console.log("Account created successfully:", data);
-
-                    // Optionally store session data or redirect user
-                    alert("Account created successfully. Please log in.");
-                    loginContainer.classList.add('hidden');
-                    createAccountContainer.classList.remove('hidden');
-                    } 
-                    catch (error) {
-                    console.error("Error:", error);
-                    alert(error.message);
-                }
-            });
-             
-*/
 
 
         // Create Account Container 
@@ -355,10 +404,8 @@
 
                         const data = await response.json();
 
-                        // Save the lobby code to localStorage
                         localStorage.setItem("lobbyCode", partyId);
 
-                        // Switch containers and update UI
                         const testPartyHeader = document.querySelector('#test-party-container .header');
                         testPartyHeader.textContent = `Welcome to Party ${partyId}`;
 
@@ -368,6 +415,9 @@
                         partyContainer.classList.add('hidden');
                         testPartyContainer.classList.remove('hidden');
 
+
+                        await fetchLobbyData();
+                    
                     } 
                     catch (error) {
                         console.error("Error:", error);
@@ -380,28 +430,6 @@
             });
 
             
-            
-            
-            
-            
-            
-
-/*
-            
-            
-            hostPartyButton.addEventListener('click', () => {    // Host a Party //later change to validate partyID
-
-                const testPartyHeader = document.querySelector('#test-party-container .header'); // Select the header
-                testPartyHeader.textContent = `Welcome to Party ${partyIDx}`;
-                
-                alert('Your PartyID is ' + partyIDx);
-                
-                partyContainer.classList.add('hidden');
-                testPartyContainer.classList.remove('hidden'); 
-
-            });
-
-*/
 
             hostPartyButton.addEventListener('click', async () => {
 
@@ -435,9 +463,13 @@
 
                     alert(`Your Party ID is ${lobbyCode}`);
 
+
                     partyContainer.classList.add('hidden');
                     testPartyContainer.classList.remove('hidden');
-                    console.log('Switched to test party container');
+
+                    await fetchLobbyData();
+                    startFetchingLobbyData();
+
                 } 
                 catch (error) {
                     console.error("Error:", error);
@@ -446,6 +478,103 @@
             });
 
 
+//Right now this is done only by the front end. Make it so that its done by the backend
+//This is where you would add in how you get the queue (submit-url is where they enter the youtube link)
+
+            var userId;
+            var isHost;
+            var timerInterval;
+            var isTimerRunning = false;
+
+
+
+            const youtubeConfig = {
+                apiKey: "AIzaSyApjUYQS3sh6wITTjYZuACIa7or7T9Vdok", // Your YouTube API key for making API calls
+                videoId: null // This will hold the parsed video ID from the URL
+            };
+
+            // Function to extract video ID from a YouTube URL
+            function extractVideoId(url) {
+                const urlPattern = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/.*[?&]v=([^&\s]*)|youtu\.be\/([^?&\s]*)/; // Regex to match YouTube URLs and extract video IDs
+                const match = url.match(urlPattern); // Check if the URL matches the regex pattern
+                return match ? match[1] || match[2] : null; // Return the first matching group (standard URL) or second group (shortened URL), or null if no match
+            }
+
+            // Event listener for Submit URL button
+            document.getElementById('submit-url').addEventListener('click', () => {
+                const urlInput = document.getElementById('youtube-url').value; // Get the value from the Paste YouTube URL input field
+                const videoId = extractVideoId(urlInput); // Extract the video ID from the provided URL
+
+                if (videoId) { // Check if a valid video ID was extracted
+                    // Updates the video ID in the config
+                    youtubeConfig.videoId = videoId; // Save the extracted video ID in the config object
+
+                    // Displays the updated video ID
+                    document.getElementById('video-id-display').textContent = `Video ID: ${videoId}`; // Update the Video ID display element with the extracted ID
+
+                    // Embed the video player
+                    embedVideoPlayer(videoId); // Call the function to embed the video player using the extracted ID
+                } else {
+                    alert("Invalid YouTube URL. Please enter a valid URL."); // Alert the user if the URL is invalid
+                }
+            });
+
+            // Function to embed the YouTube video player
+            function embedVideoPlayer(videoId) {
+                const playerContainer = document.getElementById('video-player-container'); // Get the container for the embedded video player
+                playerContainer.innerHTML = ` 
+                    <iframe
+                        width="300" 
+                        height="315" 
+                        src="https://www.youtube.com/embed/${videoId}?autoplay=1" 
+                        title="YouTube video player" 
+                        frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen> 
+                    </iframe>
+                `;
+            }                        
+
+
+
+
+
+            
+            async function fetchLobbyData() {       
+                const lobbyCode = localStorage.getItem("lobbyCode");
+                const userSession = localStorage.getItem("userSession");
+
+                userId = userSession.userID;
+
+                if (!lobbyCode) {
+                    console.error("Lobby code is not available in local storage");
+                    alert("Lobby code is missing. Please join or create a lobby first.");
+                    return;
+                }
+
+                const response = await fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || "Failed to fetch lobby data");
+                }
+
+                const data = await response.json();
+                console.log("Lobby Data:", data);
+
+                if (currentUser) {
+                    isHost = currentUser.isHost || false;
+                    console.log('User ID:', userId);
+                    console.log('Is Host:', isHost);
+                } 
+                else {
+                    console.error("User not found in lobby participants");
+                }
 
 
 
@@ -453,8 +582,63 @@
 
 
 
+/*
+
+                if (isHost) {
+                    var hostTime = player.getCurrentTime();
+                    console.log(hostTime);
+                    fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/get_host_time`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                        userId: userId,
+                        hostTime: hostTime
+                        })
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                        console.log("Host time updated:", data);
+                        })
+                        .catch(error => {
+                        console.error('Error sending host time:', error);
+                        });
+                    } 
+                    else {
+                    fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/send_host_time`, {
+                        method: 'POST'
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                        console.log("Received host time:", data);
+                        const hostTime = data.hostTime;
+                
+                        var currentUserTime = player.getCurrentTime();
+                        var timeDifference = Math.abs(currentUserTime - hostTime);
+                
+                        if (timeDifference > 3) { 
+                            console.log("Syncing player time to host time.");
+                            player.seekTo(hostTime, true);
+                        }
+                        })
+                        .catch(error => {
+                        console.error('Error receiving host time:', error);
+                        });
+                    }
+
+*/
+
+                
+            }
 
 
+            let fetchInterval;
+            function startFetchingLobbyData() {
+                // Clear any existing interval to prevent multiple intervals running simultaneously
+                if (fetchInterval) clearInterval(fetchInterval);
+
+                // Start a new interval to fetch lobby data every 5 seconds
+                fetchInterval = setInterval(fetchLobbyData, 5000);
+            }
 
 
 
@@ -464,6 +648,12 @@
         // Test Part Container Buttons
             const returnPartyButton = document.getElementById('return-party-button');
             
+
+
+//This is where you disconnect the user
+//Also need to stop fetching lobby data here
+//Make sure you have the lobby code removed from the local storage.
+
         // Test Part Container Button Functions
              returnPartyButton.addEventListener('click', () => {   // Return to Party Page
                 testPartyContainer.classList.add('hidden');
@@ -475,6 +665,24 @@
           
             });
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+            
+
+            
         
     </script>
 </body>
