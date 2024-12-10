@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SyncStream</title>
+    <!--CSS-->
+    <style>
+           /* Header styles for the main title */
+           .header {
+            color: #fcfcfcf9;
+            font-style: italic;        
+        }
+
+        /* Styles for the body to center content and apply a dark theme */
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #040404;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* Container styles for each page section */
+        .container {
+            background-color: #3e3e3e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 500px;
+            text-align: center;
+        }
+
+        /* Class to hide inactive containers */
+        .hidden {
+            display: none;
+        }
+
+        /* Input styles for text, password, and email fields */
+        input[type="text"], input[type="password"] {
+            width: 50%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #a6a6a6;
+            border-radius: 4px;         
+        }
+
+         /* Image size for the SyncStream icon */
+        img {
+            width: 200px;
+        }
+
+        /* Style for the right pane */
+       .rightpane {
+        width: 28%;
+        height: 25vh;
+        background-color: #3e3e3e;
+        text-align: center;  
+        float: right; 
+        border: 1px solid #0f0f0f;
+        padding: 10px;
+       }
+
+        /* Style for the right pane */
+       .bottompane {
+        width: 50%;
+        height: 10vh;
+        background-color: #3e3e3e;
+        text-align: center; 
+        float: left;
+        border: 1px solid #0f0f0f;
+        padding: 10px;
+       }
+
+  
+
+    </style>
+
+     <body>
+
+        <div class="container" id="party-container">
+            <h1 class="header">SyncStream</h1>
+            <input type="url" id="lobbyPage" placeholder="Enter link for YouTube video" />
+            <button onclick="addVideoToPlaylist(URL)">  Add to current playlist  </button>
+            <img src="Images/SyncStream-icon.png" alt="SyncStream Icon">
+
+            <div class = "rightpane">
+                <h2>Party Members: <span id="members-list"></span></h2>
+                <p id="party-members"></p>
+                    <div id="members-container">
+                    <span id="status">No Members</span>
+                    </div>
+            </div>
+
+            <div class = "bottompane">
+                <h3>Playlist: <span id="lobby"></span></h3>
+                <p id="playlist-description"></p>
+                    <div id="playlist-container">
+                    <span id="status">No Videos</span>
+                    </div>
+            </div>
+            
+          </div>
+        
+                
+             
+    
+
+
+
+
+
+     </body>
+
+</html>
