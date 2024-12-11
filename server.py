@@ -409,6 +409,7 @@ def add_to_queue(lobbyCode):
     }
 
 
+
 @app.route('/lobby/<lobbyCode>/remove_from_queue', methods=['POST'])
 def rem_from_queue(lobbyCode):
     lobby = lobby_system.getLobby(lobbyCode)
