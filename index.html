@@ -620,7 +620,7 @@ async function fetchLobbyData() {
 
         // Ensure that player is initialized before calling sendHostTime
         // Call sendHostTime only if player is ready
-        sendHostiTme(isHost, lobbyCode, userId);
+        sendHostTime(isHost, lobbyCode, userId);
 
         const usernames = data.participants.map(participant => participant.username);
         updateLobbyUserList(usernames);
@@ -670,8 +670,7 @@ async function fetchLobbyData() {
                         const hostTime = data.hostTime;
                         console.log("Host time:", hostTime);
 
-                        if (player && typeof player.getCurrentTime === 'function') {
-                            const currentUserTime = player.getCurrentTime();
+                        const currentUserTime = player.getCurrentTime();
                             const timeDifference = Math.abs(currentUserTime - hostTime);
 
                             console.log("Time difference:", timeDifference);
@@ -682,9 +681,7 @@ async function fetchLobbyData() {
                             } else {
                                 console.log("No syncing needed. Time difference is within 3 seconds.");
                             }
-                        } else {
-                            console.error("Player is not ready for syncing.");
-                        }
+  
                     })
                     .catch(error => {
                         console.error('Error receiving host time:', error);
