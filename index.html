@@ -242,6 +242,8 @@
 
 
 <script src="https://apis.google.com/js/api.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
+
 
     <!--Java Script-->
     <script>
@@ -415,6 +417,8 @@
                         partyContainer.classList.add('hidden');
                         testPartyContainer.classList.remove('hidden');
 
+                        document.getElementById('submit-url').classList.add('hidden');
+                        document.getElementById('youtube-url').classList.add('hidden');
 
                         await fetchLobbyData();
                     
@@ -455,13 +459,13 @@
 
                     const { lobbyCode } = data;
 
-                    // Save the lobby code to localStorage
                     localStorage.setItem("lobbyCode", lobbyCode);
 
                     const testPartyHeader = document.querySelector('#test-party-container .header');
                     testPartyHeader.textContent = `Welcome to Party ${lobbyCode}`;
 
                     alert(`Your Party ID is ${lobbyCode}`);
+
 
 
                     partyContainer.classList.add('hidden');
@@ -481,12 +485,7 @@
 //Right now this is done only by the front end. Make it so that its done by the backend
 //This is where you would add in how you get the queue (submit-url is where they enter the youtube link)
 
-            var userId;
-            var isHost;
-            var timerInterval;
-            var isTimerRunning = false;
-
-
+            let player;
 
             const youtubeConfig = {
                 apiKey: "AIzaSyApjUYQS3sh6wITTjYZuACIa7or7T9Vdok", // Your YouTube API key for making API calls
@@ -499,11 +498,42 @@
                 const match = url.match(urlPattern); // Check if the URL matches the regex pattern
                 return match ? match[1] || match[2] : null; // Return the first matching group (standard URL) or second group (shortened URL), or null if no match
             }
+            
+            function update_queue_list(queue){
+                const ul = document.getElementById('playlist-queue');
+                ul.innerHTML = '';
+
+                for(let i = 0; i <= queue.length; i++){
+                    let newLi = document.createElement('li');
+                    let item = queue[i];
+                    newLi.textContent = queue[i];
+                    ul.append(newLi);
+                }
+            }
+
+            async function add_to_queue(lobbyCode, videoId) {
+                const response = await fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/add_to_queue`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ "video" : videoId}),
+                });
+
+
+                const data = await response.json();
+
+                console.log(data["lobbyQueue"]);
+                update_queue_list(data["lobbyQueue"])
+                
+            }
+
 
             // Event listener for Submit URL button
-            document.getElementById('submit-url').addEventListener('click', () => {
+            document.getElementById('submit-url').addEventListener('click', async () => {
                 const urlInput = document.getElementById('youtube-url').value; // Get the value from the Paste YouTube URL input field
                 const videoId = extractVideoId(urlInput); // Extract the video ID from the provided URL
+                const lobbyCode = localStorage.getItem("lobbyCode");
 
                 if (videoId) { // Check if a valid video ID was extracted
                     // Updates the video ID in the config
@@ -514,132 +544,158 @@
 
                     // Embed the video player
                     embedVideoPlayer(videoId); // Call the function to embed the video player using the extracted ID
+                    
+                    document.getElementById('youtube-url').value = '';
+                    add_to_queue(lobbyCode, videoId);
+
                 } else {
                     alert("Invalid YouTube URL. Please enter a valid URL."); // Alert the user if the URL is invalid
                 }
+
+                
             });
+
+
+
+
 
             // Function to embed the YouTube video player
             function embedVideoPlayer(videoId) {
-                const playerContainer = document.getElementById('video-player-container'); // Get the container for the embedded video player
-                playerContainer.innerHTML = ` 
-                    <iframe
-                        width="300" 
-                        height="315" 
-                        src="https://www.youtube.com/embed/${videoId}?autoplay=1" 
-                        title="YouTube video player" 
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
-                        allowfullscreen> 
-                    </iframe>
-                `;
-            }                        
+                const playerContainer = document.getElementById('video-player-container');
+                playerContainer.innerHTML = ''; // Clear previous player if any
 
-
-
-
-
-            
-            async function fetchLobbyData() {       
-                const lobbyCode = localStorage.getItem("lobbyCode");
-                const userSession = localStorage.getItem("userSession");
-
-                userId = userSession.userID;
-
-                if (!lobbyCode) {
-                    console.error("Lobby code is not available in local storage");
-                    alert("Lobby code is missing. Please join or create a lobby first.");
-                    return;
-                }
-
-                const response = await fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}`, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
+                player = new YT.Player('video-player-container', {
+                    height: '315',
+                    width: '560',
+                    videoId: videoId,
+                    playerVars: {
+                        autoplay: 1,
+                        controls: 1,
+                    },
+                    events: {
+                        onReady: onPlayerReady,
+                        onStateChange: onPlayerStateChange,
                     },
                 });
+}
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || "Failed to fetch lobby data");
+//WHEN ADDING IN THE QUEUE, MAKE THE IF HOST STATEMENT ALSO CHECK IF THERE IS A VIDEO
+
+            async function fetchLobbyData() {       
+                const lobbyCode = localStorage.getItem("lobbyCode");
+                const userSession = JSON.parse(localStorage.getItem('userSession'));
+                const userId = userSession ? userSession.userID : null;
+
+                try {
+                    const response = await fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}`, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.error || "Failed to fetch lobby data");
+                    }
+
+                    const data = await response.json();
+                    console.log("Lobby Data:", data);
+
+                    // Check if the current user is the host
+                    const isHost = data.host && data.host.userId === userId;
+                    console.log(isHost);
+                    
+                    
+                    
+                    sendHostTime(isHost, lobbyCode, userId);
+
+
+                    // Optionally store this information for further use
+                } catch (error) {
+                    console.error("Error:", error);
+                    alert("An error occurred while fetching lobby data.");
                 }
-
-                const data = await response.json();
-                console.log("Lobby Data:", data);
-
-                if (currentUser) {
-                    isHost = currentUser.isHost || false;
-                    console.log('User ID:', userId);
-                    console.log('Is Host:', isHost);
-                } 
-                else {
-                    console.error("User not found in lobby participants");
-                }
+            }
 
 
 
 
 
-
-
-/*
-
+            function sendHostTime(isHost, lobbyCode, userId) {
                 if (isHost) {
                     var hostTime = player.getCurrentTime();
                     console.log(hostTime);
                     fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/get_host_time`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
                         userId: userId,
                         hostTime: hostTime
-                        })
                     })
-                        .then(response => response.json())
-                        .then(data => {
+                    })
+                    .then(response => response.json())
+                    .then(data => {
                         console.log("Host time updated:", data);
-                        })
-                        .catch(error => {
-                        console.error('Error sending host time:', error);
-                        });
-                    } 
-                    else {
-                    fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/send_host_time`, {
-                        method: 'POST'
                     })
-                        .then(response => response.json())
-                        .then(data => {
+                    .catch(error => {
+                        console.error('Error sending host time:', error);
+                    });
+                } 
+                else
+                {
+                    fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/send_host_time`, {
+                    method: 'POST'
+                    })
+                    .then(response => response.json())
+                    .then(data => {
                         console.log("Received host time:", data);
                         const hostTime = data.hostTime;
-                
+
                         var currentUserTime = player.getCurrentTime();
                         var timeDifference = Math.abs(currentUserTime - hostTime);
-                
+
                         if (timeDifference > 3) { 
-                            console.log("Syncing player time to host time.");
-                            player.seekTo(hostTime, true);
+                        console.log("Syncing player time to host time.");
+                        player.seekTo(hostTime, true);
                         }
-                        })
-                        .catch(error => {
+                    })
+                    .catch(error => {
                         console.error('Error receiving host time:', error);
-                        });
-                    }
-
-*/
-
-                
+                    });
+                }
             }
 
 
-            let fetchInterval;
+// Calls startTimer when the video gets played
+// Calls when the player is ready
+            function onPlayerReady(event) {
+                event.target.playVideo(); // Start playing the video as soon as it's ready
+            }
+
+            // Listens for changes in the player's state (e.g., play/pause)
+            function onPlayerStateChange(event) {
+                if (event.data == YT.PlayerState.PLAYING) {
+                    console.log("Video is playing");
+                } else if (event.data == YT.PlayerState.PAUSED) {
+                    console.log("Video is paused");
+                }
+            }
+
+
+
+
+            let fetchInterval;  // Declare this globally
+
             function startFetchingLobbyData() {
-                // Clear any existing interval to prevent multiple intervals running simultaneously
-                if (fetchInterval) clearInterval(fetchInterval);
+                // Clear the interval if it's already running
+                if (fetchInterval) {
+                    clearInterval(fetchInterval);
+                }
 
                 // Start a new interval to fetch lobby data every 5 seconds
                 fetchInterval = setInterval(fetchLobbyData, 5000);
             }
-
 
 
 
@@ -655,35 +711,35 @@
 //Make sure you have the lobby code removed from the local storage.
 
         // Test Part Container Button Functions
-             returnPartyButton.addEventListener('click', () => {   // Return to Party Page
+        async function disconnect_user(lobbyCode, userID) {
+                const response = await fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/disconnect_user`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ "userId" : userID}),
+                });
+
+
+                const data = await response.json();
+                
+                localStorage.removeItem("lobbyCode")
+            }
+
+             returnPartyButton.addEventListener('click', async () => {   // Return to Party Page
+                const lobbyCode = localStorage.getItem("lobbyCode");
+                var userID = JSON.parse(localStorage.getItem("userSession"));
+                userID = userID["userID"];
                 testPartyContainer.classList.add('hidden');
                 partyContainer.classList.remove('hidden');
-
+                console.log(userID)
+                disconnect_user(lobbyCode,userID);
             });
 
 
           
             });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-            
-
-            
-        
     </script>
 </body>
 </html>
