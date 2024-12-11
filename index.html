@@ -550,163 +550,31 @@
             });
 
 
+//Miniplayer
+function embedVideoPlayer(videoId, isHost) {
+    const playerContainer = document.getElementById('video-player-container');
+    playerContainer.innerHTML = ''; // Clear previous player if any
 
-
-
-            // Function to embed the YouTube video player
-            function embedVideoPlayer(videoId) {
-                const playerContainer = document.getElementById('video-player-container');
-                playerContainer.innerHTML = ''; // Clear previous player if any
-
-                player = new YT.Player('video-player-container', {
-                    height: '315',
-                    width: '560',
-                    videoId: videoId,
-                    playerVars: {
-                        autoplay: 1,
-                        controls: 1,
-                    },
-                    events: {
-                        onReady: onPlayerReady,
-                        onStateChange: onPlayerStateChange,
-                    },
-                });
-}
-
-
-
-
-//WHEN ADDING IN THE QUEUE, MAKE THE IF HOST STATEMENT ALSO CHECK IF THERE IS A VIDEO
-
-            async function fetchLobbyData() {       
-                const lobbyCode = localStorage.getItem("lobbyCode");
-                const userSession = JSON.parse(localStorage.getItem('userSession'));
-                const userId = userSession ? userSession.userID : null;
-
-                try {
-                    const response = await fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}`, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.error || "Failed to fetch lobby data");
-                    }
-
-                    const data = await response.json();
-                    console.log("Lobby Data:", data);
-                    
-                    
-                    // Check if the current user is the host
-                    const isHost = data.host && data.host.userId === userId;
-                    console.log(isHost);
-                    
-                    if(!isHost){
-                        embedVideoPlayer((data["videoQueue"][0]).toString())
-                    }
-                    
-                    
-                    sendHostTime(isHost, lobbyCode, userId);
-
-
-                    // Optionally store this information for further use
-                } catch (error) {
+    player = new YT.Player('video-player-container', {
+        height: '315',
+        width: '560',
+        videoId: videoId,
+        playerVars: {
+            autoplay: 1,
+            controls: 1,
+        },
+        events: {
+            onReady: () => {
+                console.log("Player ready.");
+                if (!isHost) {
+                    // Sync with host after the player is ready for non-host users
+                    sendHostTime(isHost, localStorage.getItem("lobbyCode"), JSON.parse(localStorage.getItem("userSession")).userID);
+                    console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
                 }
-            }
-
-
-
-
-
-            function sendHostTime(isHost, lobbyCode, userId) {
-            if (isHost && player) {
-                var hostTime = player.getCurrentTime();
-                console.log(hostTime);
-                fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/get_host_time`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        userId: userId,
-                        hostTime: hostTime
-                    })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log("Host time updated:", data);
-                })
-                .catch(error => {
-                    console.error('Error sending host time:', error);
-                });
-            } 
-            else {
-                console.log("Sending request to sync with host time...");
-                fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/send_host_time`, {
-                    method: 'POST'
-                })
-                .then(response => {
-                    console.log("Response status:", response.status);
-                    return response.json();
-                })
-                .then(data => {
-                    console.log("Received host time data:", data);
-
-                    if (!data || typeof data.hostTime === 'undefined') {
-                        console.error('Host time is not available in the response.');
-                        return;
-                    }
-
-                    const hostTime = data.hostTime;
-                    console.log("Host time:", hostTime);
-
-                    // Check if player is available before using it
-                    if (!player) {
-                        console.error("Player is not available in the else block.");
-                        return;
-                    }
-
-                    var currentUserTime = player.getCurrentTime();
-                    console.log("Current user time:", currentUserTime);
-
-                    var timeDifference = Math.abs(currentUserTime - hostTime);
-                    console.log("Time difference:", timeDifference);
-
-                    if (timeDifference > 3) {
-                        console.log("Syncing player time to host time.");
-                        player.seekTo(hostTime, true);
-                    } else {
-                        console.log("No syncing needed. Time difference is within 3 seconds.");
-                    }
-                })
-                .catch(error => {
-                    console.error('Error receiving host time:', error);
-                });
-            }
-            }
-
-// Calls startTimer when the video gets played
-// Calls when the player is ready
-function onPlayerReady(event) {
-    const lobbyCode = localStorage.getItem("lobbyCode");
-
-    // Retrieve user session from localStorage
-    const userSessionData = JSON.parse(localStorage.getItem("userSession"));
-    const userId = userSessionData ? userSessionData.userID : null;
-
-    // Check if userId exists
-    if (!userId) {
-        console.error("User ID not found in localStorage");
-        return;
-    }
-
-    // Player is ready
-    console.log("Player is ready!");
-    player = event.target;
-
-    // Now you can safely use player.getCurrentTime()
-    sendHostTime(true, lobbyCode, userId); // Pass userId to sendHostTime for the host
+            },
+            onStateChange: onPlayerStateChange,
+        },
+    });
 }
 
 
@@ -721,8 +589,110 @@ function onPlayerReady(event) {
 
 
 
+async function fetchLobbyData() {
+    const lobbyCode = localStorage.getItem("lobbyCode");
+    const userSession = JSON.parse(localStorage.getItem("userSession"));
+    const userId = userSession ? userSession.userID : null;
 
-            let fetchInterval;  // Declare this globally
+    try {
+        const response = await fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to fetch lobby data");
+        }
+
+        const data = await response.json();
+        console.log("Lobby Data:", data);
+
+        const isHost = data.host && data.host.userId === userId;
+        console.log("Is Host:", isHost);
+
+        // Embed the video player if not the host
+        if (!isHost && data.videoQueue.length > 0) {
+            embedVideoPlayer(data.videoQueue[0].toString(), isHost);
+        }
+
+        // Ensure that player is initialized before calling sendHostTime
+        // Call sendHostTime only if player is ready
+        sendHostiTme(isHost, lobbyCode, userId);
+
+        const usernames = data.participants.map(participant => participant.username);
+        updateLobbyUserList(usernames);
+    } catch (error) {
+        console.error("Error fetching lobby data:", error);
+    }
+}
+
+//Get or send host time
+            function sendHostTime(isHost, lobbyCode, userId) {
+                if (isHost && player && typeof player.getCurrentTime === 'function') {
+                    const hostTime = player.getCurrentTime();
+                    console.log("Host current time:", hostTime);
+
+                    fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/get_host_time`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: userId,
+                            hostTime: hostTime
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log("Host time updated:", data);
+                    })
+                    .catch(error => {
+                        console.error('Error sending host time:', error);
+                    });
+                } else if (!isHost) {
+                    console.log("Attempting to sync with host time...");
+                    fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/send_host_time`, {
+                        method: 'POST'
+                    })
+                    .then(response => {
+                        console.log("Response status:", response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log("Received host time data:", data);
+
+                        if (!data || typeof data.hostTime === 'undefined') {
+                            console.error('Host time is not available in the response.');
+                            return;
+                        }
+
+                        const hostTime = data.hostTime;
+                        console.log("Host time:", hostTime);
+
+                        if (player && typeof player.getCurrentTime === 'function') {
+                            const currentUserTime = player.getCurrentTime();
+                            const timeDifference = Math.abs(currentUserTime - hostTime);
+
+                            console.log("Time difference:", timeDifference);
+
+                            if (timeDifference > 3) {
+                                console.log("Syncing player time to host time.");
+                                player.seekTo(hostTime, true);
+                            } else {
+                                console.log("No syncing needed. Time difference is within 3 seconds.");
+                            }
+                        } else {
+                            console.error("Player is not ready for syncing.");
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error receiving host time:', error);
+                    });
+                } else {
+                    console.error("Player not initialized or user is not a host.");
+                }
+            }
 
             function startFetchingLobbyData() {
                 // Clear the interval if it's already running
@@ -734,6 +704,25 @@ function onPlayerReady(event) {
                 fetchInterval = setInterval(fetchLobbyData, 5000);
             }
 
+
+
+            function updateLobbyUserList(usernames) {
+                const userListElement = document.getElementById('lobby-users-list');
+                userListElement.innerHTML = '';
+
+                if (usernames.length === 0) {
+                    userListElement.innerHTML = '<li>No users in the lobby</li>';
+                    return;
+                }
+
+                usernames.forEach(username => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = username;
+                    userListElement.appendChild(listItem);
+                });
+            }
+
+            let fetchInterval;  // Declare this globally
 
 
         // Test Part Container 
@@ -763,15 +752,31 @@ function onPlayerReady(event) {
                 localStorage.removeItem("lobbyCode")
             }
 
-             returnPartyButton.addEventListener('click', async () => {   // Return to Party Page
-                const lobbyCode = localStorage.getItem("lobbyCode");
-                var userID = JSON.parse(localStorage.getItem("userSession"));
-                userID = userID["userID"];
-                testPartyContainer.classList.add('hidden');
-                partyContainer.classList.remove('hidden');
-                console.log(userID)
-                disconnect_user(lobbyCode,userID);
-            });
+    returnPartyButton.addEventListener('click', async () => {
+        const lobbyCode = localStorage.getItem("lobbyCode");
+        const userSession = JSON.parse(localStorage.getItem("userSession"));
+        const userID = userSession ? userSession.userID : null;
+
+        if (lobbyCode && userID) {
+            try {
+                await disconnect_user(lobbyCode, userID); // Call the disconnection API
+                console.log("User disconnected successfully.");
+            } catch (error) {
+                console.error("Error disconnecting user:", error);
+            }
+        }
+
+        // Stop fetching lobby data
+        if (fetchInterval) {
+            clearInterval(fetchInterval);
+            fetchInterval = null;
+        }
+
+        // Reset UI and clear local storage
+        localStorage.removeItem("lobbyCode");
+        testPartyContainer.classList.add('hidden');
+        partyContainer.classList.remove('hidden');
+    });
 
 
           
