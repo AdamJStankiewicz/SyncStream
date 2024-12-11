@@ -126,6 +126,7 @@ class Database:
                         OR username=?""",
                     (id, username))
         
+        
         result = cursor.fetchone()
         return result
 

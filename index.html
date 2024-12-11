@@ -538,6 +538,7 @@
                     document.getElementById('video-id-display').textContent = `Video ID: ${videoId}`; // Update the Video ID display element with the extracted ID
 
                     // Embed the video player
+                    
                     embedVideoPlayer(videoId); // Call the function to embed the video player using the extracted ID
                     
                     document.getElementById('youtube-url').value = '';
@@ -552,8 +553,13 @@
 
 //Miniplayer
 function embedVideoPlayer(videoId, isHost) {
+    console.log("SKIBIDI OHIO")
     const playerContainer = document.getElementById('video-player-container');
     playerContainer.innerHTML = ''; // Clear previous player if any
+
+    if(player){
+        return
+    }
 
     player = new YT.Player('video-player-container', {
         height: '315',
@@ -620,8 +626,9 @@ async function fetchLobbyData() {
 
         // Ensure that player is initialized before calling sendHostTime
         // Call sendHostTime only if player is ready
-        sendHostTime(isHost, lobbyCode, userId);
-
+        sendHostTime(isHost, localStorage.getItem("lobbyCode"), JSON.parse(localStorage.getItem("userSession")).userID);
+        //embedVideoPlayer(data.videoQueue[0].toString(), isHost);
+        //console.log("SKIBIDI!!!")
         const usernames = data.participants.map(participant => participant.username);
         updateLobbyUserList(usernames);
     } catch (error) {
@@ -669,18 +676,21 @@ async function fetchLobbyData() {
 
                         const hostTime = data.hostTime;
                         console.log("Host time:", hostTime);
+                        
+                        //console.log("PLAYER CURRENT TIME: ", player.getCurrentTime())
 
-                        const currentUserTime = player.getCurrentTime();
-                            const timeDifference = Math.abs(currentUserTime - hostTime);
+                        //const currentUserTime = player.getCurrentTime();
+                        //const timeDifference = Math.abs(currentUserTime - hostTime);
 
-                            console.log("Time difference:", timeDifference);
+                        //console.log("Time difference:", timeDifference);
+                        player.seekTo(hostTime, true);
 
-                            if (timeDifference > 3) {
-                                console.log("Syncing player time to host time.");
-                                player.seekTo(hostTime, true);
-                            } else {
-                                console.log("No syncing needed. Time difference is within 3 seconds.");
-                            }
+                        //if (timeDifference > 3) {
+                            //console.log("Syncing player time to host time.");
+                           // player.seekTo(hostTime, true);
+                        //} else {
+                         //   console.log("No syncing needed. Time difference is within 3 seconds.");
+                       // }
   
                     })
                     .catch(error => {
