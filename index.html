@@ -419,7 +419,8 @@
                         document.getElementById('youtube-url').classList.add('hidden');
 
                         await fetchLobbyData();
-                    
+                        startFetchingLobbyData();
+
                     } 
                     catch (error) {
                     }
@@ -572,6 +573,9 @@
                 });
 }
 
+
+
+
 //WHEN ADDING IN THE QUEUE, MAKE THE IF HOST STATEMENT ALSO CHECK IF THERE IS A VIDEO
 
             async function fetchLobbyData() {       
@@ -618,55 +622,93 @@
 
 
             function sendHostTime(isHost, lobbyCode, userId) {
-                if (isHost) {
-                    var hostTime = player.getCurrentTime();
-                    console.log(hostTime);
-                    fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/get_host_time`, {
+            if (isHost && player) {
+                var hostTime = player.getCurrentTime();
+                console.log(hostTime);
+                fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/get_host_time`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         userId: userId,
                         hostTime: hostTime
                     })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log("Host time updated:", data);
-                    })
-                    .catch(error => {
-                        console.error('Error sending host time:', error);
-                    });
-                } 
-                else
-                {
-                    fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/send_host_time`, {
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log("Host time updated:", data);
+                })
+                .catch(error => {
+                    console.error('Error sending host time:', error);
+                });
+            } 
+            else {
+                console.log("Sending request to sync with host time...");
+                fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/send_host_time`, {
                     method: 'POST'
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        console.log("Received host time:", data);
-                        const hostTime = data.hostTime;
+                })
+                .then(response => {
+                    console.log("Response status:", response.status);
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Received host time data:", data);
 
-                        var currentUserTime = player.getCurrentTime();
-                        var timeDifference = Math.abs(currentUserTime - hostTime);
+                    if (!data || typeof data.hostTime === 'undefined') {
+                        console.error('Host time is not available in the response.');
+                        return;
+                    }
 
-                        if (timeDifference > 3) { 
+                    const hostTime = data.hostTime;
+                    console.log("Host time:", hostTime);
+
+                    // Check if player is available before using it
+                    if (!player) {
+                        console.error("Player is not available in the else block.");
+                        return;
+                    }
+
+                    var currentUserTime = player.getCurrentTime();
+                    console.log("Current user time:", currentUserTime);
+
+                    var timeDifference = Math.abs(currentUserTime - hostTime);
+                    console.log("Time difference:", timeDifference);
+
+                    if (timeDifference > 3) {
                         console.log("Syncing player time to host time.");
                         player.seekTo(hostTime, true);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error receiving host time:', error);
-                    });
-                }
+                    } else {
+                        console.log("No syncing needed. Time difference is within 3 seconds.");
+                    }
+                })
+                .catch(error => {
+                    console.error('Error receiving host time:', error);
+                });
             }
-
+            }
 
 // Calls startTimer when the video gets played
 // Calls when the player is ready
-            function onPlayerReady(event) {
-                event.target.playVideo(); // Start playing the video as soon as it's ready
-            }
+function onPlayerReady(event) {
+    const lobbyCode = localStorage.getItem("lobbyCode");
+
+    // Retrieve user session from localStorage
+    const userSessionData = JSON.parse(localStorage.getItem("userSession"));
+    const userId = userSessionData ? userSessionData.userID : null;
+
+    // Check if userId exists
+    if (!userId) {
+        console.error("User ID not found in localStorage");
+        return;
+    }
+
+    // Player is ready
+    console.log("Player is ready!");
+    player = event.target;
+
+    // Now you can safely use player.getCurrentTime()
+    sendHostTime(true, lobbyCode, userId); // Pass userId to sendHostTime for the host
+}
+
 
             // Listens for changes in the player's state (e.g., play/pause)
             function onPlayerStateChange(event) {
