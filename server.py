@@ -10,6 +10,7 @@ import hashlib
 
 app = Flask(__name__)
 CORS(app)
+
 socketio = SocketIO(app)
 
 connection = sqlite3.connect('syncstream.db', check_same_thread=False)
@@ -170,6 +171,7 @@ class User:
 class Lobby:
     def __init__(self, lobbyId, host, lobbyCode):
         self.lobbyId = lobbyId
+
         self.host = host
         self.lobbyCode = lobbyCode
         self.videoQueue = []
@@ -180,6 +182,9 @@ class Lobby:
 
     def addVideoToQueue(self, videoUrl):
         self.videoQueue.append(videoUrl)
+
+    def remVideoFromQueue(self,videoUrl):
+        self.videoQueue.pop(videoUrl)
 
     def getVideoQueue(self):
         return self.videoQueue
@@ -199,8 +204,10 @@ class Lobby:
 
     def disconnect(self, userID):
         if userID in self.participants:
+
             removed_user = self.participants.pop(userID)
             if removed_user.is_host:
+
                 self.isActive = False
                 print(f"Host {userID} left, lobby deactivated.")
 
@@ -389,7 +396,27 @@ def add_to_queue(lobbyCode):
     lobby = lobby_system.getLobby(lobbyCode)
     video = request.json["video"]
 
+
     lobby.addVideoToQueue(video)
+
+
+    print("Video added to queue: " + video)
+
+
+
+    return {
+        'lobbyQueue' : lobby.getVideoQueue()
+    }
+
+
+@app.route('/lobby/<lobbyCode>/remove_from_queue', methods=['POST'])
+def rem_from_queue(lobbyCode):
+    lobby = lobby_system.getLobby(lobbyCode)
+    video = request.json["video"]
+
+    lobby.remVideoFromQueue(video)
+
+    print("Video removed from queue: " + video)
 
     return {
         'lobbyQueue' : lobby.getVideoQueue()
@@ -401,7 +428,7 @@ def disconnect_user(lobbyCode):
     userID = request.json["userId"]
 
     lobby.disconnect(userID)
-
+    print("User: " + userID + " disconnected")
     return {
         'user_removed' : userID
     }

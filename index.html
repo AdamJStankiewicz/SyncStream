@@ -336,8 +336,6 @@
                     loginContainer.classList.remove('hidden');
                 } 
                 catch (error) {
-                    console.error("Error:", error);
-                    alert("An error occurred: " + error.message);
                 }
 
             });
@@ -424,8 +422,6 @@
                     
                     } 
                     catch (error) {
-                        console.error("Error:", error);
-                        alert("An error occurred while joining the lobby. Please try again.");
                     }
                 } 
                 else {
@@ -476,8 +472,6 @@
 
                 } 
                 catch (error) {
-                    console.error("Error:", error);
-                    alert("An error occurred while creating the lobby. Please try again.");
                 }
             });
 
@@ -549,7 +543,6 @@
                     add_to_queue(lobbyCode, videoId);
 
                 } else {
-                    alert("Invalid YouTube URL. Please enter a valid URL."); // Alert the user if the URL is invalid
                 }
 
                 
@@ -601,11 +594,15 @@
 
                     const data = await response.json();
                     console.log("Lobby Data:", data);
-
+                    
+                    
                     // Check if the current user is the host
                     const isHost = data.host && data.host.userId === userId;
                     console.log(isHost);
                     
+                    if(!isHost){
+                        embedVideoPlayer((data["lobbyId"][0]).toString())
+                    }
                     
                     
                     sendHostTime(isHost, lobbyCode, userId);
@@ -613,8 +610,6 @@
 
                     // Optionally store this information for further use
                 } catch (error) {
-                    console.error("Error:", error);
-                    alert("An error occurred while fetching lobby data.");
                 }
             }
 
