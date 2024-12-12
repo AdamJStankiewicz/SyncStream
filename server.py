@@ -225,7 +225,7 @@ class Lobby:
 class LobbySystem:
     def __init__(self):
         self.lobbies = {}
-        self.lobbyCodes = {}
+        #self.lobbyCodes = {}
 
     def createLobby(self, host):
         lobbyId = str(uuid.uuid4())
@@ -239,10 +239,7 @@ class LobbySystem:
         return newLobby
 
     def generate_lobby_code(self):
-        lobbyCode = random.randrange(1000,9999)
-        while(lobbyCode in self.lobbyCodes):
-            lobbyCode = random.randrange(1000,9999)
-        return lobbyCode
+        return("123")
 
     def getLobby(self, lobbyCode):
         return self.lobbies.get(lobbyCode)
