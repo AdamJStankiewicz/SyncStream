@@ -161,7 +161,7 @@
     <!-- Login Container -->
     <div class="container" id="login-container">
         <h1 class="header">SyncStream</h1>
-        <img src="Images/SyncStream-icon.png" alt="SyncStream Icon">
+        <img src="SyncStream-icon.png" alt="SyncStream Icon">
         <form>
             <!-- Username and Password input fields -->
             <input type="text" name="username" placeholder="Username" required>
@@ -179,7 +179,7 @@
     <!-- Create Account Container -->
     <div class="container hidden" id="create-account-container">
         <h1 class="header">SyncStream</h1>
-        <img src="Images/SyncStream-icon.png" alt="SyncStream Icon">
+        <img src="SyncStream-icon.png" alt="SyncStream Icon">
         <form>
             <!-- Input fields for account creation -->
             <input type="text" name="username" placeholder="Username" required>
@@ -194,7 +194,7 @@
     <!--Host/Join Party Container -->
     <div class="container hidden" id="party-container">
         <h1 class="header">SyncStream Party</h1>
-        <img src="Images/SyncStream-icon.png" alt="SyncStream Icon">
+        <img src="SyncStream-icon.png" alt="SyncStream Icon">
            <div>
             <input type="text" id="party-id" placeholder="Enter Party ID" required>
             <button id="join-party-button">Join Party</button> <!-- Join an existing party / validate with server?-->
@@ -250,358 +250,292 @@
 
     <!--Java Script-->
     <script>
-        // () => or function()
-        document.addEventListener('DOMContentLoaded', () => {
+    const baseURL = "https://100.99.253.110:1477/";
+document.addEventListener('DOMContentLoaded', () => {
 
-        // Login Container
-            const loginContainer = document.getElementById('login-container');
+    // Login Container
+    const loginContainer = document.getElementById('login-container');
 
-        // Login Container Buttons
-            const loginButton = document.getElementById('login-button');
-            const createAccountButton = document.getElementById('create-account-button');
+    // Login Container Buttons
+    const loginButton = document.getElementById('login-button');
+    const createAccountButton = document.getElementById('create-account-button');
 
-        // Login Container Button Functions
-            loginButton.addEventListener('click', async function () {
-                const username = document.querySelector("input[name='username']").value;
-                const password = document.querySelector("input[name='password']").value;
+    // Login Container Button Functions
+    loginButton.addEventListener('click', async function () {
+        const username = document.querySelector("input[name='username']").value;
+        const password = document.querySelector("input[name='password']").value;
 
-                try {
-                    const response = await fetch("http://127.0.0.1:1477/login", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ username, password }),
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.ERROR || "Login failed");
-                    }
-
-                    const data = await response.json();
-                    localStorage.clear();
-                    // Save session data to localStorage
-                    const userSessionData = {
-                        sessionID: data.sessionID,
-                        userID: data.id,
-                    };
-                    localStorage.setItem("userSession", JSON.stringify(userSessionData));
-
-                    loginContainer.classList.add("hidden");
-                    partyContainer.classList.remove("hidden");
-                } 
-                catch (error) {
-                    messageDiv.textContent = error.message;
-                    console.error("Error:", error);
-                }
-            });
-        
-        
-            const createAccount = document.getElementById('submit-account-button');
-
-            createAccountButton.addEventListener('click', () => {
-                loginContainer.classList.add('hidden');
-                createAccountContainer.classList.remove('hidden');
+        try {
+            const response = await fetch(`${baseURL}/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ username, password }),
             });
 
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.ERROR || "Login failed");
+            }
 
-            createAccount.addEventListener('click', async () => {
-                const username = document.querySelector("#create-account-container input[name='username']").value;
-                const password = document.querySelector("#create-account-container input[name='password']").value;
-                const confirmPassword = document.querySelector("#create-account-container input[name='confirm-password']").value;
-
-                if (password !== confirmPassword) {
-                    alert("Passwords do not match. Please try again.");
-                    return;
-                }
-
-                try {
-                    const response = await fetch("http://127.0.0.1:1477/account", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ username, password }),
-                    });
-
-                    const rawResponse = await response.text();
-                    console.log("Raw Response:", rawResponse);
-
-                    if (!response.ok) {
-                        const errorData = JSON.parse(rawResponse);
-                        throw new Error(errorData.ERROR || "Account creation failed");
-                    }
-
-                    const data = JSON.parse(rawResponse);
-                    alert("Account created successfully. Please log in.");
-                    createAccountContainer.classList.add('hidden');
-                    loginContainer.classList.remove('hidden');
-                } 
-                catch (error) {
-                }
-
-            });
-
-
-
-        // Create Account Container 
-            const createAccountContainer = document.getElementById('create-account-container');
-
-        // Create Account Container Buttons
-            const returnLoginButton = document.getElementById('return-login-button');
-            //const createAccount = document.getElementById('submit-account-button');
-
-        // Create Account Container Button Functions
-            returnLoginButton.addEventListener('click', () => {  // Return to Login page
-                createAccountContainer.classList.add('hidden');
-                loginContainer.classList.remove('hidden');
-            });
-
-        // Host/Join Party Container 
-            const partyContainer = document.getElementById('party-container');
-            
-        // Host/Join Party Container Buttons
-            const hostPartyButton = document.getElementById('host-party-button');
-            const joinPartyButton = document.getElementById('join-party-button');
-            const partyReturnLoginButton = document.getElementById('party-return-login-button');
-            
-        // Host/Join Party Container Button Functions
-            
-            partyReturnLoginButton.addEventListener('click', () => {   // Return to Login page
-                partyContainer.classList.add('hidden');
-                loginContainer.classList.remove('hidden');
-            });
-            
-            
-            
-            
-            
-            
-            
-            joinPartyButton.addEventListener('click', async () => {
-                const partyId = document.getElementById('party-id').value;
-                
-                const userSessionData = JSON.parse(localStorage.getItem("userSession"));
-                
-
-
-                if (partyId) {
-                    try {
-                        // Send a request to the backend to join the lobby
-                        const response = await fetch("http://127.0.0.1:1477/lobby/join", {
-                            method: "POST",
-                            headers: {
-                                "Content-Type": "application/json",
-                            },
-                            body: JSON.stringify({
-                                userId: userSessionData.userID,
-                                lobbyCode: partyId,
-                            }),
-                        });
-
-                        if (!response.ok) {
-                            const errorData = await response.json();
-                            throw new Error(errorData.ERROR || "Failed to join lobby");
-                        }
-
-                        const data = await response.json();
-
-                        localStorage.setItem("lobbyCode", partyId);
-
-                        const testPartyHeader = document.querySelector('#test-party-container .header');
-                        testPartyHeader.textContent = `Welcome to Party ${partyId}`;
-
-                        alert(`You have successfully joined Party ${partyId}`);
-
-                        // Hide the party container and show the test party container
-                        partyContainer.classList.add('hidden');
-                        testPartyContainer.classList.remove('hidden');
-
-                        document.getElementById('submit-url').classList.add('hidden');
-                        document.getElementById('youtube-url').classList.add('hidden');
-
-                        await fetchLobbyData();
-                        startFetchingLobbyData();
-
-                    } 
-                    catch (error) {
-                    }
-                } 
-                else {
-                    alert('Please enter a Party ID');
-                }
-            });
-
-            hostPartyButton.addEventListener('click', async () => {
-
-                const userSessionData = JSON.parse(localStorage.getItem("userSession"));
-
-
-                try {
-                    const response = await fetch("http://127.0.0.1:1477/lobby/create", {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json",
-                        },
-                        body: JSON.stringify({ userId: userSessionData.userID }),
-                    });
-
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        console.error('Error response from server:', errorData);
-                        throw new Error(errorData.ERROR || "Failed to create lobby");
-                    }
-
-                    const data = await response.json();
-
-                    const { lobbyCode } = data;
-
-                    localStorage.setItem("lobbyCode", lobbyCode);
-
-                    const testPartyHeader = document.querySelector('#test-party-container .header');
-                    testPartyHeader.textContent = `Welcome to Party ${lobbyCode}`;
-
-                    alert(`Your Party ID is ${lobbyCode}`);
-
-
-
-                    partyContainer.classList.add('hidden');
-                    testPartyContainer.classList.remove('hidden');
-
-                    await fetchLobbyData();
-                    startFetchingLobbyData();
-
-                } 
-                catch (error) {
-                }
-            });
-
-
-//Right now this is done only by the front end. Make it so that its done by the backend
-//This is where you would add in how you get the queue (submit-url is where they enter the youtube link)
-
-            let player;
-
-            const youtubeConfig = {
-                apiKey: "AIzaSyApjUYQS3sh6wITTjYZuACIa7or7T9Vdok", // Your YouTube API key for making API calls
-                videoId: null // This will hold the parsed video ID from the URL
+            const data = await response.json();
+            localStorage.clear();
+            const userSessionData = {
+                sessionID: data.sessionID,
+                userID: data.id,
             };
+            localStorage.setItem("userSession", JSON.stringify(userSessionData));
 
-            // Function to extract video ID from a YouTube URL
-            function extractVideoId(url) {
-                const urlPattern = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/.*[?&]v=([^&\s]*)|youtu\.be\/([^?&\s]*)/; // Regex to match YouTube URLs and extract video IDs
-                const match = url.match(urlPattern); // Check if the URL matches the regex pattern
-                return match ? match[1] || match[2] : null; // Return the first matching group (standard URL) or second group (shortened URL), or null if no match
+            loginContainer.classList.add("hidden");
+            partyContainer.classList.remove("hidden");
+        } catch (error) {
+            messageDiv.textContent = error.message;
+        }
+    });
+
+    const createAccount = document.getElementById('submit-account-button');
+
+    createAccountButton.addEventListener('click', () => {
+        loginContainer.classList.add('hidden');
+        createAccountContainer.classList.remove('hidden');
+    });
+
+    createAccount.addEventListener('click', async () => {
+        const username = document.querySelector("#create-account-container input[name='username']").value;
+        const password = document.querySelector("#create-account-container input[name='password']").value;
+        const confirmPassword = document.querySelector("#create-account-container input[name='confirm-password']").value;
+
+        if (password !== confirmPassword) {
+            alert("Passwords do not match. Please try again.");
+            return;
+        }
+
+        try {
+            const response = await fetch(`${baseURL}/account`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const rawResponse = await response.text();
+
+            if (!response.ok) {
+                const errorData = JSON.parse(rawResponse);
+                throw new Error(errorData.ERROR || "Account creation failed");
             }
-            
-            function update_queue_list(queue){
-                const ul = document.getElementById('playlist-queue');
-                ul.innerHTML = '';
 
-                for(let i = 0; i <= queue.length; i++){
-                    let newLi = document.createElement('li');
-                    let item = queue[i];
-                    newLi.textContent = queue[i];
-                    ul.append(newLi);
-                }
-            }
+            const data = JSON.parse(rawResponse);
+            alert("Account created successfully. Please log in.");
+            createAccountContainer.classList.add('hidden');
+            loginContainer.classList.remove('hidden');
+        } catch (error) {
+            // Handle error
+        }
+    });
 
-            async function add_to_queue(lobbyCode, videoId) {
-                const response = await fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/add_to_queue`, {
+    // Create Account Container 
+    const createAccountContainer = document.getElementById('create-account-container');
+
+    // Create Account Container Buttons
+    const returnLoginButton = document.getElementById('return-login-button');
+
+    returnLoginButton.addEventListener('click', () => {
+        createAccountContainer.classList.add('hidden');
+        loginContainer.classList.remove('hidden');
+    });
+
+    // Host/Join Party Container 
+    const partyContainer = document.getElementById('party-container');
+    
+    // Host/Join Party Container Buttons
+    const hostPartyButton = document.getElementById('host-party-button');
+    const joinPartyButton = document.getElementById('join-party-button');
+    const partyReturnLoginButton = document.getElementById('party-return-login-button');
+    
+    // Host/Join Party Container Button Functions
+    partyReturnLoginButton.addEventListener('click', () => {
+        partyContainer.classList.add('hidden');
+        loginContainer.classList.remove('hidden');
+    });
+
+    joinPartyButton.addEventListener('click', async () => {
+        const partyId = document.getElementById('party-id').value;
+        const userSessionData = JSON.parse(localStorage.getItem("userSession"));
+
+        if (partyId) {
+            try {
+                const response = await fetch(`${baseURL}/lobby/join`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ "video" : videoId}),
+                    body: JSON.stringify({
+                        userId: userSessionData.userID,
+                        lobbyCode: partyId,
+                    }),
                 });
 
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.ERROR || "Failed to join lobby");
+                }
 
                 const data = await response.json();
+                localStorage.setItem("lobbyCode", partyId);
 
-                console.log(data["lobbyQueue"]);
-                update_queue_list(data["lobbyQueue"])
-                
+                const testPartyHeader = document.querySelector('#test-party-container .header');
+                testPartyHeader.textContent = `Welcome to Party ${partyId}`;
+
+                alert(`You have successfully joined Party ${partyId}`);
+
+                partyContainer.classList.add('hidden');
+                testPartyContainer.classList.remove('hidden');
+
+                document.getElementById('submit-url').classList.add('hidden');
+                document.getElementById('youtube-url').classList.add('hidden');
+
+                await fetchLobbyData();
+                startFetchingLobbyData();
+            } catch (error) {
+                // Handle error
             }
+        } else {
+            alert('Please enter a Party ID');
+        }
+    });
 
+    hostPartyButton.addEventListener('click', async () => {
+        const userSessionData = JSON.parse(localStorage.getItem("userSession"));
 
-            // Event listener for Submit URL button
-            document.getElementById('submit-url').addEventListener('click', async () => {
-                const urlInput = document.getElementById('youtube-url').value; // Get the value from the Paste YouTube URL input field
-                const videoId = extractVideoId(urlInput); // Extract the video ID from the provided URL
-                const lobbyCode = localStorage.getItem("lobbyCode");
-
-                if (videoId) { // Check if a valid video ID was extracted
-                    // Updates the video ID in the config
-                    youtubeConfig.videoId = videoId; // Save the extracted video ID in the config object
-
-                    // Displays the updated video ID
-                    document.getElementById('video-id-display').textContent = `Video ID: ${videoId}`; // Update the Video ID display element with the extracted ID
-
-                    // Embed the video player
-                    
-                    embedVideoPlayer(videoId); // Call the function to embed the video player using the extracted ID
-                    
-                    document.getElementById('youtube-url').value = '';
-                    add_to_queue(lobbyCode, videoId);
-
-                } else {
-                }
-
-                
+        try {
+            const response = await fetch(`${baseURL}/lobby/create`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ userId: userSessionData.userID }),
             });
 
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.ERROR || "Failed to create lobby");
+            }
 
-//Miniplayer
-function embedVideoPlayer(videoId, isHost) {
-    console.log("SKIBIDI OHIO")
-    const playerContainer = document.getElementById('video-player-container');
-    playerContainer.innerHTML = ''; // Clear previous player if any
+            const data = await response.json();
+            const { lobbyCode } = data;
 
-    if(player){
-        return
+            localStorage.setItem("lobbyCode", lobbyCode);
+
+            const testPartyHeader = document.querySelector('#test-party-container .header');
+            testPartyHeader.textContent = `Welcome to Party ${lobbyCode}`;
+
+            alert(`Your Party ID is ${lobbyCode}`);
+
+            partyContainer.classList.add('hidden');
+            testPartyContainer.classList.remove('hidden');
+
+            await fetchLobbyData();
+            startFetchingLobbyData();
+        } catch (error) {
+            // Handle error
+        }
+    });
+
+    let player;
+
+    const youtubeConfig = {
+        apiKey: "AIzaSyApjUYQS3sh6wITTjYZuACIa7or7T9Vdok",
+        videoId: null
+    };
+
+    function extractVideoId(url) {
+        const urlPattern = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/.*[?&]v=([^&\s]*)|youtu\.be\/([^?&\s]*)/;
+        const match = url.match(urlPattern);
+        return match ? match[1] || match[2] : null;
     }
 
-    player = new YT.Player('video-player-container', {
-        height: '315',
-        width: '560',
-        videoId: videoId,
-        playerVars: {
-            autoplay: 1,
-            controls: 1,
-        },
-        events: {
-            onReady: () => {
-                console.log("Player ready.");
-                if (!isHost) {
-                    
-                    // Sync with host after the player is ready for non-host users
-                    sendHostTime(isHost, localStorage.getItem("lobbyCode"), JSON.parse(localStorage.getItem("userSession")).userID);
-                }
-            },
-            onStateChange: onPlayerStateChange,
-        },
-    });
-}
+    function update_queue_list(queue) {
+        const ul = document.getElementById('playlist-queue');
+        ul.innerHTML = '';
 
-
-            // Listens for changes in the player's state (e.g., play/pause)
-            function onPlayerStateChange(event) {
-            if (event.data == YT.PlayerState.ENDED) {
-                console.log("Video ended. Loading the next video...");
-                playNextVideo(); // Call the function to play the next video
-            } else if (event.data == YT.PlayerState.PLAYING) {
-                console.log("Video is playing");
-            } else if (event.data == YT.PlayerState.PAUSED) {
-                console.log("Video is paused");
-            }
+        for (let i = 0; i < queue.length; i++) {
+            let newLi = document.createElement('li');
+            newLi.textContent = queue[i];
+            ul.append(newLi);
         }
+    }
+
+    async function add_to_queue(lobbyCode, videoId) {
+        const response = await fetch(`${baseURL}/lobby/${lobbyCode}/add_to_queue`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ "video": videoId }),
+        });
+
+        const data = await response.json();
+        update_queue_list(data["lobbyQueue"]);
+    }
+
+    document.getElementById('submit-url').addEventListener('click', async () => {
+        const urlInput = document.getElementById('youtube-url').value;
+        const videoId = extractVideoId(urlInput);
+        const lobbyCode = localStorage.getItem("lobbyCode");
+
+        if (videoId) {
+            youtubeConfig.videoId = videoId;
+
+            document.getElementById('video-id-display').textContent = `Video ID: ${videoId}`;
+
+            embedVideoPlayer(videoId);
+
+            document.getElementById('youtube-url').value = '';
+            add_to_queue(lobbyCode, videoId);
+        }
+    });
+
+    function embedVideoPlayer(videoId, isHost) {
+        const playerContainer = document.getElementById('video-player-container');
+        playerContainer.innerHTML = '';
+
+        if (player) {
+            return;
+        }
+
+        player = new YT.Player('video-player-container', {
+            height: '315',
+            width: '560',
+            videoId: videoId,
+            playerVars: {
+                autoplay: 1,
+                controls: 1,
+            },
+            events: {
+                onReady: () => {
+                    if (!isHost) {
+                        sendHostTime(isHost, localStorage.getItem("lobbyCode"), JSON.parse(localStorage.getItem("userSession")).userID);
+                    }
+                },
+                onStateChange: onPlayerStateChange,
+            },
+        });
+    }
+
+    function onPlayerStateChange(event) {
+        if (event.data == YT.PlayerState.ENDED) {
+            playNextVideo();
+        }
+    }
 
         async function playNextVideo() {
             const lobbyCode = localStorage.getItem("lobbyCode");
             try {
                 // Send a request to remove the first video and get the updated queue
-                const response = await fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/remove_from_queue`, {
+                const response = await fetch(`${baseURL}/lobby/${lobbyCode}/remove_from_queue`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({}) // Backend removes the first video and updates the queue
@@ -620,7 +554,8 @@ function embedVideoPlayer(videoId, isHost) {
                 // Check if there's a next video in the queue
                 if (updatedQueue.length > 0) {
                     const nextVideoId = updatedQueue[0]; // Get the next video's ID
-                    embedVideoPlayer(nextVideoId); // Embed the player with the next video
+                    // Update the player for all clients (non-hosts too)
+                    embedVideoPlayer(nextVideoId); // Embed the next video
                 } else {
                     console.log("Queue is empty. No more videos to play.");
                 }
@@ -639,7 +574,7 @@ async function fetchLobbyData() {
     const userId = userSession ? userSession.userID : null;
 
     try {
-        const response = await fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}`, {
+        const response = await fetch(`${baseURL}/lobby/${lobbyCode}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -656,36 +591,45 @@ async function fetchLobbyData() {
 
         const isHost = data.host && data.host.userId === userId;
         console.log("Is Host:", isHost);
-
-        // Embed the video player if not the host
-        if (!isHost && data.videoQueue.length > 0) {
-            currentVideo = data.videoQueue[0].toString()
-            embedVideoPlayer(data.videoQueue[0].toString(), isHost);
+        const nextVideoButton = document.getElementById('next-video');
+        
+        // Show the next video button only for the host
+        if (isHost) {
+            nextVideoButton.classList.remove('hidden');
+        } else {
+            nextVideoButton.classList.add('hidden');
         }
 
-        // Ensure that player is initialized before calling sendHostTime
-        // Call sendHostTime only if player is ready
-        sendHostTime(isHost, localStorage.getItem("lobbyCode"), JSON.parse(localStorage.getItem("userSession")).userID);
-        //embedVideoPlayer(data.videoQueue[0].toString(), isHost);
-        //console.log("SKIBIDI!!!")
-        
-
+        // Extract the video queue and participants
+        const queue = data['videoQueue'];
         const usernames = data.participants.map(participant => participant.username);
-        const queue = data['videoQueue']
+
+        // Update the user list and video queue on the frontend
         updateLobbyUserList(usernames);
         update_queue_list(queue);
-        console.log("Current video: " + currentVideo)
-        console.log("Top of queue: " + queue[0].toString())
-        if(currentVideo != queue[0].toString()){
-            console.log("NEW VIDEO!!!")
-            currentVideo = data.videoQueue[0].toString()
-            if (player && typeof player.loadVideoById === 'function') {
-                            player.loadVideoById(currentVideo); // Load the next video without reinitializing
-                        } else {
-                            embedVideoPlayer(currentVideo, true); // Reinitialize the player if it doesn't exist
-                        }
+
+        // Ensure the player syncs with the queue for non-hosts
+        if (!isHost && queue.length > 0) {
+            const nextVideoId = queue[0].toString();
+            console.log("Current video: " + currentVideo);
+            console.log("Top of queue: " + nextVideoId);
+
+            // Check if the current video in the miniplayer is different from the top of the queue
+            if (currentVideo !== nextVideoId) {
+                console.log("NEW VIDEO!!!");
+                currentVideo = nextVideoId;
+
+                // Load the new video if the player exists
+                if (player && typeof player.loadVideoById === 'function') {
+                    player.loadVideoById(currentVideo); // Update the video without reinitializing the player
+                } else {
+                    embedVideoPlayer(currentVideo, isHost); // Reinitialize the player if it doesn't exist
+                }
+            }
         }
 
+        // If the user is the host, send the host time
+        sendHostTime(isHost, lobbyCode, userId);
 
     } catch (error) {
         console.error("Error fetching lobby data:", error);
@@ -698,7 +642,7 @@ async function fetchLobbyData() {
                     const hostTime = player.getCurrentTime();
                     console.log("Host current time:", hostTime);
 
-                    fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/get_host_time`, {
+                    fetch(`${baseURL}/lobby/${lobbyCode}/get_host_time`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -716,7 +660,7 @@ async function fetchLobbyData() {
                 } else if (!isHost) {
 
                     console.log("Attempting to sync with host time...");
-                    fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/send_host_time`, {
+                    fetch(`${baseURL}/lobby/${lobbyCode}/send_host_time`, {
                         method: 'POST'
                     })
                     .then(response => {
@@ -803,7 +747,7 @@ async function fetchLobbyData() {
 
                 try {
                     // Request to remove the first video from the queue
-                    const response = await fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/remove_from_queue`, {
+                    const response = await fetch(`${baseURL}/lobby/${lobbyCode}/remove_from_queue`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({})
@@ -820,14 +764,11 @@ async function fetchLobbyData() {
                     const updatedQueue = data["lobbyQueue"];
                     console.log("Updated queue:", updatedQueue);
 
-                    // Update the UI with the new queue
                     update_queue_list(updatedQueue);
 
-                    // Play the next video in the queue if it exists
                     if (updatedQueue.length > 0) {
-                        const nextVideoId = updatedQueue[0]; // Get the next video ID
+                        const nextVideoId = updatedQueue[0];
 
-                        // Check if the player is already initialized
                         if (player && typeof player.loadVideoById === 'function') {
                             player.loadVideoById(nextVideoId); // Load the next video without reinitializing
                         } else {
@@ -852,7 +793,7 @@ async function fetchLobbyData() {
 
         // Test Part Container Button Functions
         async function disconnect_user(lobbyCode, userID) {
-                const response = await fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/disconnect_user`, {
+                const response = await fetch(`${baseURL}/lobby/${lobbyCode}/disconnect_user`, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
@@ -892,8 +833,6 @@ async function fetchLobbyData() {
         partyContainer.classList.remove('hidden');
     });
 
-
-          
             });
 
     </script>

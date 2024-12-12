@@ -239,7 +239,7 @@ class LobbySystem:
         return newLobby
 
     def generate_lobby_code(self):
-        return("123")
+        return str(random.randint(1000, 9999))
 
     def getLobby(self, lobbyCode):
         return self.lobbies.get(lobbyCode)
@@ -457,7 +457,6 @@ def disconnect_user(lobbyCode):
     return {
         'user_removed' : userID
     }
-
 
 init()
 
