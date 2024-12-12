@@ -220,6 +220,7 @@
     <div id="video-player-container"></div> <!-- Placeholder for video player -->
     </div>
 
+    <button id="next-video">Next Video!</button>
 
 <!-- Lobby Section --> 
  <div class="lobby">
@@ -430,8 +431,6 @@
                 }
             });
 
-            
-
             hostPartyButton.addEventListener('click', async () => {
 
                 const userSessionData = JSON.parse(localStorage.getItem("userSession"));
@@ -575,7 +574,6 @@ function embedVideoPlayer(videoId, isHost) {
                 if (!isHost) {
                     // Sync with host after the player is ready for non-host users
                     sendHostTime(isHost, localStorage.getItem("lobbyCode"), JSON.parse(localStorage.getItem("userSession")).userID);
-                    console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
                 }
             },
             onStateChange: onPlayerStateChange,
@@ -586,13 +584,47 @@ function embedVideoPlayer(videoId, isHost) {
 
             // Listens for changes in the player's state (e.g., play/pause)
             function onPlayerStateChange(event) {
-                if (event.data == YT.PlayerState.PLAYING) {
-                    console.log("Video is playing");
-                } else if (event.data == YT.PlayerState.PAUSED) {
-                    console.log("Video is paused");
-                }
+            if (event.data == YT.PlayerState.ENDED) {
+                console.log("Video ended. Loading the next video...");
+                playNextVideo(); // Call the function to play the next video
+            } else if (event.data == YT.PlayerState.PLAYING) {
+                console.log("Video is playing");
+            } else if (event.data == YT.PlayerState.PAUSED) {
+                console.log("Video is paused");
             }
+        }
 
+        async function playNextVideo() {
+            const lobbyCode = localStorage.getItem("lobbyCode");
+            try {
+                // Send a request to remove the first video and get the updated queue
+                const response = await fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/remove_from_queue`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}) // Backend removes the first video and updates the queue
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("Error fetching the next video:", errorData.error);
+                    return;
+                }
+
+                const data = await response.json();
+                const updatedQueue = data["lobbyQueue"];
+                update_queue_list(updatedQueue); // Update the UI with the new queue
+
+                // Check if there's a next video in the queue
+                if (updatedQueue.length > 0) {
+                    const nextVideoId = updatedQueue[0]; // Get the next video's ID
+                    embedVideoPlayer(nextVideoId); // Embed the player with the next video
+                } else {
+                    console.log("Queue is empty. No more videos to play.");
+                }
+            } catch (error) {
+                console.error("Failed to play the next video:", error);
+            }
+        }
 
 
 async function fetchLobbyData() {
@@ -739,9 +771,59 @@ async function fetchLobbyData() {
             
 
 
-//This is where you disconnect the user
-//Also need to stop fetching lobby data here
-//Make sure you have the lobby code removed from the local storage.
+
+
+            document.getElementById('next-video').addEventListener('click', async () => {
+                const lobbyCode = localStorage.getItem("lobbyCode");
+
+                try {
+                    // Request to remove the first video from the queue
+                    const response = await fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/remove_from_queue`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({})
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.error("Error removing video:", errorData.error);
+                        return;
+                    }
+
+                    // Retrieve the updated queue from the server response
+                    const data = await response.json();
+                    const updatedQueue = data["lobbyQueue"];
+                    console.log("Updated queue:", updatedQueue);
+
+                    // Update the UI with the new queue
+                    update_queue_list(updatedQueue);
+
+                    // Play the next video in the queue if it exists
+                    if (updatedQueue.length > 0) {
+                        const nextVideoId = updatedQueue[0]; // Get the next video ID
+
+                        // Check if the player is already initialized
+                        if (player && typeof player.loadVideoById === 'function') {
+                            player.loadVideoById(nextVideoId); // Load the next video without reinitializing
+                        } else {
+                            embedVideoPlayer(nextVideoId, true); // Reinitialize the player if it doesn't exist
+                        }
+                    } else {
+                        console.log("No more videos in the queue.");
+                        if (player && typeof player.stopVideo === 'function') {
+                            player.stopVideo(); // Stop the player if the queue is empty
+                        }
+                    }
+                } catch (error) {
+                    console.error("Failed to handle next video:", error);
+                }
+            });
+
+
+
+
+
+
 
         // Test Part Container Button Functions
         async function disconnect_user(lobbyCode, userID) {

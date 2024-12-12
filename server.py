@@ -184,8 +184,11 @@ class Lobby:
     def addVideoToQueue(self, videoUrl):
         self.videoQueue.append(videoUrl)
 
-    def remVideoFromQueue(self,videoUrl):
-        self.videoQueue.pop(videoUrl)
+    def remVideoFromQueue(self, videoUrl):
+        if videoUrl in self.videoQueue:
+            self.videoQueue.remove(videoUrl)
+        else:
+            raise ValueError(f"Video '{videoUrl}' not found in the queue")
 
     def getVideoQueue(self):
         return self.videoQueue
@@ -352,7 +355,9 @@ def get_lobby_state(lobbyCode):
             'participants': [
                 {
                     'userId': participant.user_id,
-                    'isHost': participant.is_host
+                    'isHost': participant.is_host,
+                    'username': Database.get_username_by_userid(participant.user_id)
+
                 } for participant in lobby.participants.values()
             ],
             'videoQueue': lobby.videoQueue,
@@ -413,16 +418,32 @@ def add_to_queue(lobbyCode):
 
 @app.route('/lobby/<lobbyCode>/remove_from_queue', methods=['POST'])
 def rem_from_queue(lobbyCode):
-    lobby = lobby_system.getLobby(lobbyCode)
-    video = request.json["video"]
+    try:
+        lobby = lobby_system.getLobby(lobbyCode)
+        if not lobby:
+            return {"error": "Lobby not found"}, 404
 
-    lobby.remVideoFromQueue(video)
+        # Safely get video from request body or default to None
+        video = request.json.get("video", None)
 
-    print("Video removed from queue: " + video)
+        # If no video is provided, remove the first video in the queue
+        if video is None:
+            if lobby.getVideoQueue():
+                video = lobby.getVideoQueue()[0]
+            else:
+                return {"error": "Queue is empty"}, 400
 
-    return {
-        'lobbyQueue' : lobby.getVideoQueue()
-    }
+        # Attempt to remove the video
+        try:
+            lobby.remVideoFromQueue(video)
+        except ValueError:
+            return {"error": f"Video '{video}' not found in the queue"}, 404
+
+        print("Video removed from queue: " + video)
+        return {"lobbyQueue": lobby.getVideoQueue()}, 200
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        return {"error": "Internal server error"}, 500
 
 @app.route('/lobby/<lobbyCode>/disconnect_user', methods=['POST'])
 def disconnect_user(lobbyCode):
