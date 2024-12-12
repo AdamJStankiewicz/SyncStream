@@ -220,7 +220,8 @@
     <div id="video-player-container"></div> <!-- Placeholder for video player -->
     </div>
 
-    <button id="next-video">Next Video!</button>
+    
+    
 
 <!-- Lobby Section --> 
  <div class="lobby">
@@ -238,6 +239,7 @@
     </ul>
 </div>
 </div>
+<button id="next-video">Next Video!</button>
 <button id="return-party-button">Return to Party Page</button>
 </div>
 
@@ -572,6 +574,7 @@ function embedVideoPlayer(videoId, isHost) {
             onReady: () => {
                 console.log("Player ready.");
                 if (!isHost) {
+                    
                     // Sync with host after the player is ready for non-host users
                     sendHostTime(isHost, localStorage.getItem("lobbyCode"), JSON.parse(localStorage.getItem("userSession")).userID);
                 }
@@ -627,6 +630,9 @@ function embedVideoPlayer(videoId, isHost) {
         }
 
 
+
+let currentVideo;
+
 async function fetchLobbyData() {
     const lobbyCode = localStorage.getItem("lobbyCode");
     const userSession = JSON.parse(localStorage.getItem("userSession"));
@@ -653,6 +659,7 @@ async function fetchLobbyData() {
 
         // Embed the video player if not the host
         if (!isHost && data.videoQueue.length > 0) {
+            currentVideo = data.videoQueue[0].toString()
             embedVideoPlayer(data.videoQueue[0].toString(), isHost);
         }
 
@@ -661,8 +668,25 @@ async function fetchLobbyData() {
         sendHostTime(isHost, localStorage.getItem("lobbyCode"), JSON.parse(localStorage.getItem("userSession")).userID);
         //embedVideoPlayer(data.videoQueue[0].toString(), isHost);
         //console.log("SKIBIDI!!!")
+        
+
         const usernames = data.participants.map(participant => participant.username);
+        const queue = data['videoQueue']
         updateLobbyUserList(usernames);
+        update_queue_list(queue);
+        console.log("Current video: " + currentVideo)
+        console.log("Top of queue: " + queue[0].toString())
+        if(currentVideo != queue[0].toString()){
+            console.log("NEW VIDEO!!!")
+            currentVideo = data.videoQueue[0].toString()
+            if (player && typeof player.loadVideoById === 'function') {
+                            player.loadVideoById(currentVideo); // Load the next video without reinitializing
+                        } else {
+                            embedVideoPlayer(currentVideo, true); // Reinitialize the player if it doesn't exist
+                        }
+        }
+
+
     } catch (error) {
         console.error("Error fetching lobby data:", error);
     }
@@ -690,6 +714,7 @@ async function fetchLobbyData() {
                         console.error('Error sending host time:', error);
                     });
                 } else if (!isHost) {
+
                     console.log("Attempting to sync with host time...");
                     fetch(`http://127.0.0.1:1477/lobby/${lobbyCode}/send_host_time`, {
                         method: 'POST'
