@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SyncStream</title>
+    <!--CSS-->
+    <style>
+        /* Header styles for the main title */
+        .header {
+        color: #fcfcfcf9;
+        font-style: italic;
+    }
+    /* Styles for the body to center content and apply a dark theme */
+    body {
+        font-family: 'Roboto', sans-serif;
+        background-color: #040404;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        margin: 0;
+    }
+    /* Container styles for each page section */
+    .container {
+        
+        background-color: #3e3e3e;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 550px;
+        text-align: center;
+        flex-direction: row;
+  
+        
+    }
+
+    
+    .container .media-box {
+        position: relative; /* Enable absolute positioning for children */
+        width: 100%; 
+        height: 100%; 
+        margin: auto;
+        background-color: #444; 
+        border-radius: 10px;
+        overflow: hidden; /* Prevent children from overflowing */
+        }
+
+     .video-container {
+           position: absolute; /* Allow free placement */
+           top: 0%; 
+           left: 0%;
+           width: 300px; /* Adjust as needed */
+           height: 315px; /* Fixed height for the video */
+           background-color: #f0f0f0; /* Optional background color */
+           border: 2px solid #ddd;
+           border-radius: 10px;
+           display: flex;
+           justify-content: center;
+           align-items: center;
+           position: relative;
+        }
+
+        #video-player-container iframe {
+     
+           border: 2px solid #ddd;
+           border-radius: 10px;
+        }
+
+  
+
+  .lobby {
+        position: absolute; /* Allow free placement */
+        top: 51%; /* Adjust position */
+        left: 59%;  
+        width: 200px;
+        height: 140px;
+        background-color: #007BFF;
+        border: 2px solid #0056b3;
+        border-radius: 5px;
+     
+        
+        }
+
+        #lobby-users-list {
+        list-style-type: none; 
+        padding: 0; 
+        margin: 0; /* Removes default margin */
+    }
+        
+
+      .playlist {
+        position: absolute; /* Allow free placement */
+        top: 0%; 
+        left: 59%;  
+        width: 200px;
+        height: 140px;
+        background-color: #007BFF;
+        border: 2px solid #0056b3;
+        border-radius: 5px;
+        }
+
+        #playlist-queue {
+        list-style-type: none; 
+        padding: 0; 
+        margin: 0; 
+    }
+
+    
+
+    /* Class to hide inactive containers */
+    .hidden {
+        display: none;
+    }
+
+    /* Input styles for text, password, and email fields */
+    input[type="text"], input[type="password"] {
+        width: 50%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #a6a6a6;
+        border-radius: 4px;
+        
+    }
+    
+    /* Button styles*/
+    button {
+        background-color: #61C1F3;
+        color: rgb(3, 3, 3);
+        padding: 10px 15px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    /* Button hover effect */
+    button:hover {
+        background-color: #FD7426;
+    }
+
+    /* Style for message text below buttons */
+    .message {
+        margin-top: 20px;
+        font-size: 1.2em;
+        color: #fefefef9;
+        font-style: italic;
+    }
+
+     /* Image size for the SyncStream icon */
+    img {
+        width: 200px;
+    }
+
+</style>
+
+</head>
+<body>
+    <!--<form> element is used to create a container for collecting and submitting user input to a server.-->
+    <!--<div> element is a generic container used to group other elements for styling or layout purposes.-->
+    
+    <!-- Login Container -->
+    <div class="container" id="login-container">
+        <h1 class="header">SyncStream</h1>
+        <img src="SyncStream-icon.png" alt="SyncStream Icon">
+        <form>
+            <!-- Username and Password input fields -->
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+        </form>
+        <!-- Login button -->
+        <button type="button" id="login-button">Login</button>
+        <!-- Button to navigate to the Create Account page -->
+        <button id="create-account-button">Create an Account</button>
+        <div class="message">
+            "Come sync with us"
+        </div>   
+    </div>
+
+    <!-- Create Account Container -->
+    <div class="container hidden" id="create-account-container">
+        <h1 class="header">SyncStream</h1>
+        <img src="SyncStream-icon.png" alt="SyncStream Icon">
+        <form>
+            <!-- Input fields for account creation -->
+            <input type="text" name="username" placeholder="Username" required>
+            <input type="password" name="password" placeholder="Password" required>
+            <input type="password" name="confirm-password" placeholder="Confirm Password" required>
+            <!--Need to figure out submit to server, and if then for password confirmation-->
+        </form>   
+        <button id="submit-account-button">Create Account</button> <!-- Submit account creation -->
+        <button id="return-login-button">Return to Login</button> <!-- Return to Login page -->
+    </div>
+
+    <!--Host/Join Party Container -->
+    <div class="container hidden" id="party-container">
+        <h1 class="header">SyncStream Party</h1>
+        <img src="SyncStream-icon.png" alt="SyncStream Icon">
+           <div>
+            <input type="text" id="party-id" placeholder="Enter Party ID" required>
+            <button id="join-party-button">Join Party</button> <!-- Join an existing party / validate with server?-->
+           <!-- generated host partyId needs to get generated and sent to server?-->
+            <button id="host-party-button">Host Party</button>  <!-- Start hosting a party -->
+            <button id="party-return-login-button">Return to Login</button>
+        </div> 
+    </div>
+
+<!-- Party Container -->
+<div class="container hidden" id="test-party-container">
+    <h1 class="header">Welcome to Party 1234</h1>
+<!-- Paste YouTube URL -->
+    <input type="text" id="youtube-url" placeholder="Paste YouTube URL here" />
+    <button id="submit-url">Queue it!</button>
+    <p id="video-id-display">Video ID: None</p>
+
+    <!--<div id="video-player-container"></div> --><!-- Placeholder for video player --> 
+
+    <div class="media-box">
+<!-- Video Container --> 
+    <div class="video-container">
+    <div id="video-player-container"></div> <!-- Placeholder for video player -->
+    </div>
+
+    
+    
+
+<!-- Lobby Section --> 
+ <div class="lobby">
+    <strong>Lobby:</strong>
+    <ul id="lobby-users-list"> <!--CALL THIS-->
+        <li>Waiting for server data...</li>
+    </ul>
+</div>
+
+<!-- Playlist Section -->
+<div class="playlist">
+    <strong>Playlist:</strong>
+    <ul id="playlist-queue">    <!--CALL THIS-->
+        <li>Waiting for server data...</li>
+    </ul>
+</div>
+</div>
+<button id="next-video">Next Video!</button>
+<button id="return-party-button">Return to Party Page</button>
+</div>
+
+
+<script src="https://apis.google.com/js/api.js"></script>
+<script src="https://www.youtube.com/iframe_api"></script>
+
+
+    <!--Java Script-->
+    <script>
+    const baseURL = "http://98.235.167.45:1477";
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+    // Login Container
+    const loginContainer = document.getElementById('login-container');
+
+    // Login Container Buttons
+    const loginButton = document.getElementById('login-button');
+    const createAccountButton = document.getElementById('create-account-button');
+
+    // Login Container Button Functions
+    loginButton.addEventListener('click', async function () {
+        const username = document.querySelector("input[name='username']").value;
+        const password = document.querySelector("input[name='password']").value;
+
+        try {
+            const response = await fetch(`${baseURL}/login`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ username, password }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.ERROR || "Login failed");
+            }
+
+            const data = await response.json();
+            localStorage.clear();
+            const userSessionData = {
+                sessionID: data.sessionID,
+                userID: data.id,
+            };
+            localStorage.setItem("userSession", JSON.stringify(userSessionData));
+
+            loginContainer.classList.add("hidden");
+            partyContainer.classList.remove("hidden");
+        } catch (error) {
+            messageDiv.textContent = error.message;
+        }
+    });
+
+    const createAccount = document.getElementById('submit-account-button');
+
+    createAccountButton.addEventListener('click', () => {
+        loginContainer.classList.add('hidden');
+        createAccountContainer.classList.remove('hidden');
+    });
+
+    createAccount.addEventListener('click', async () => {
+        const username = document.querySelector("#create-account-container input[name='username']").value;
+        const password = document.querySelector("#create-account-container input[name='password']").value;
+        const confirmPassword = document.querySelector("#create-account-container input[name='confirm-password']").value;
+
+        if (password !== confirmPassword) {
+            alert("Passwords do not match. Please try again.");
+            return;
+        }
+
+        try {
+            const response = await fetch(`${baseURL}/account`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ username, password }),
+            });
+
+            const rawResponse = await response.text();
+
+            if (!response.ok) {
+                const errorData = JSON.parse(rawResponse);
+                throw new Error(errorData.ERROR || "Account creation failed");
+            }
+
+            const data = JSON.parse(rawResponse);
+            alert("Account created successfully. Please log in.");
+            createAccountContainer.classList.add('hidden');
+            loginContainer.classList.remove('hidden');
+        } catch (error) {
+            // Handle error
+        }
+    });
+
+    // Create Account Container 
+    const createAccountContainer = document.getElementById('create-account-container');
+
+    // Create Account Container Buttons
+    const returnLoginButton = document.getElementById('return-login-button');
+
+    returnLoginButton.addEventListener('click', () => {
+        createAccountContainer.classList.add('hidden');
+        loginContainer.classList.remove('hidden');
+    });
+
+    // Host/Join Party Container 
+    const partyContainer = document.getElementById('party-container');
+    
+    // Host/Join Party Container Buttons
+    const hostPartyButton = document.getElementById('host-party-button');
+    const joinPartyButton = document.getElementById('join-party-button');
+    const partyReturnLoginButton = document.getElementById('party-return-login-button');
+    
+    // Host/Join Party Container Button Functions
+    partyReturnLoginButton.addEventListener('click', () => {
+        partyContainer.classList.add('hidden');
+        loginContainer.classList.remove('hidden');
+    });
+
+    joinPartyButton.addEventListener('click', async () => {
+        const partyId = document.getElementById('party-id').value;
+        const userSessionData = JSON.parse(localStorage.getItem("userSession"));
+
+        if (partyId) {
+            try {
+                const response = await fetch(`${baseURL}/lobby/join`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        userId: userSessionData.userID,
+                        lobbyCode: partyId,
+                    }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.ERROR || "Failed to join lobby");
+                }
+
+                const data = await response.json();
+                localStorage.setItem("lobbyCode", partyId);
+
+                const testPartyHeader = document.querySelector('#test-party-container .header');
+                testPartyHeader.textContent = `Welcome to Party ${partyId}`;
+
+                alert(`You have successfully joined Party ${partyId}`);
+
+                partyContainer.classList.add('hidden');
+                testPartyContainer.classList.remove('hidden');
+
+                document.getElementById('submit-url').classList.add('hidden');
+                document.getElementById('youtube-url').classList.add('hidden');
+
+                await fetchLobbyData();
+                startFetchingLobbyData();
+            } catch (error) {
+                // Handle error
+            }
+        } else {
+            alert('Please enter a Party ID');
+        }
+    });
+
+    hostPartyButton.addEventListener('click', async () => {
+        const userSessionData = JSON.parse(localStorage.getItem("userSession"));
+
+        try {
+            const response = await fetch(`${baseURL}/lobby/create`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ userId: userSessionData.userID }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.ERROR || "Failed to create lobby");
+            }
+
+            const data = await response.json();
+            const { lobbyCode } = data;
+
+            localStorage.setItem("lobbyCode", lobbyCode);
+
+            const testPartyHeader = document.querySelector('#test-party-container .header');
+            testPartyHeader.textContent = `Welcome to Party ${lobbyCode}`;
+
+            alert(`Your Party ID is ${lobbyCode}`);
+
+            partyContainer.classList.add('hidden');
+            testPartyContainer.classList.remove('hidden');
+
+            await fetchLobbyData();
+            startFetchingLobbyData();
+        } catch (error) {
+            // Handle error
+        }
+    });
+
+    let player;
+
+    const youtubeConfig = {
+        apiKey: "AIzaSyApjUYQS3sh6wITTjYZuACIa7or7T9Vdok",
+        videoId: null
+    };
+
+    function extractVideoId(url) {
+        const urlPattern = /(?:https?:\/\/)?(?:www\.)?youtube\.com\/.*[?&]v=([^&\s]*)|youtu\.be\/([^?&\s]*)/;
+        const match = url.match(urlPattern);
+        return match ? match[1] || match[2] : null;
+    }
+
+    function update_queue_list(queue) {
+        const ul = document.getElementById('playlist-queue');
+        ul.innerHTML = '';
+
+        for (let i = 0; i < queue.length; i++) {
+            let newLi = document.createElement('li');
+            newLi.textContent = queue[i];
+            ul.append(newLi);
+        }
+    }
+
+    async function add_to_queue(lobbyCode, videoId) {
+        const response = await fetch(`${baseURL}/lobby/${lobbyCode}/add_to_queue`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ "video": videoId }),
+        });
+
+        const data = await response.json();
+        update_queue_list(data["lobbyQueue"]);
+    }
+
+    document.getElementById('submit-url').addEventListener('click', async () => {
+        const urlInput = document.getElementById('youtube-url').value;
+        const videoId = extractVideoId(urlInput);
+        const lobbyCode = localStorage.getItem("lobbyCode");
+
+        if (videoId) {
+            youtubeConfig.videoId = videoId;
+
+            document.getElementById('video-id-display').textContent = `Video ID: ${videoId}`;
+
+            embedVideoPlayer(videoId);
+
+            document.getElementById('youtube-url').value = '';
+            add_to_queue(lobbyCode, videoId);
+        }
+    });
+
+    function embedVideoPlayer(videoId, isHost) {
+        const playerContainer = document.getElementById('video-player-container');
+        playerContainer.innerHTML = '';
+
+        if (player) {
+            return;
+        }
+
+        player = new YT.Player('video-player-container', {
+            height: '315',
+            width: '560',
+            videoId: videoId,
+            playerVars: {
+                autoplay: 1,
+                controls: 1,
+            },
+            events: {
+                onReady: () => {
+                    if (!isHost) {
+                        sendHostTime(isHost, localStorage.getItem("lobbyCode"), JSON.parse(localStorage.getItem("userSession")).userID);
+                    }
+                },
+                onStateChange: onPlayerStateChange,
+            },
+        });
+    }
+
+    function onPlayerStateChange(event) {
+        if (event.data == YT.PlayerState.ENDED) {
+            playNextVideo();
+        }
+    }
+
+        async function playNextVideo() {
+            const lobbyCode = localStorage.getItem("lobbyCode");
+            try {
+                // Send a request to remove the first video and get the updated queue
+                const response = await fetch(`${baseURL}/lobby/${lobbyCode}/remove_from_queue`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({}) // Backend removes the first video and updates the queue
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error("Error fetching the next video:", errorData.error);
+                    return;
+                }
+
+                const data = await response.json();
+                const updatedQueue = data["lobbyQueue"];
+                update_queue_list(updatedQueue); // Update the UI with the new queue
+
+                // Check if there's a next video in the queue
+                if (updatedQueue.length > 0) {
+                    const nextVideoId = updatedQueue[0]; // Get the next video's ID
+                    // Update the player for all clients (non-hosts too)
+                    embedVideoPlayer(nextVideoId); // Embed the next video
+                } else {
+                    console.log("Queue is empty. No more videos to play.");
+                }
+            } catch (error) {
+                console.error("Failed to play the next video:", error);
+            }
+        }
+
+
+
+let currentVideo;
+
+async function fetchLobbyData() {
+    const lobbyCode = localStorage.getItem("lobbyCode");
+    const userSession = JSON.parse(localStorage.getItem("userSession"));
+    const userId = userSession ? userSession.userID : null;
+
+    try {
+        const response = await fetch(`${baseURL}/lobby/${lobbyCode}`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || "Failed to fetch lobby data");
+        }
+
+        const data = await response.json();
+        console.log("Lobby Data:", data);
+
+        const isHost = data.host && data.host.userId === userId;
+        console.log("Is Host:", isHost);
+        const nextVideoButton = document.getElementById('next-video');
+        
+        // Show the next video button only for the host
+        if (isHost) {
+            nextVideoButton.classList.remove('hidden');
+        } else {
+            nextVideoButton.classList.add('hidden');
+        }
+
+        // Extract the video queue and participants
+        const queue = data['videoQueue'];
+        const usernames = data.participants.map(participant => participant.username);
+
+        // Update the user list and video queue on the frontend
+        updateLobbyUserList(usernames);
+        update_queue_list(queue);
+
+        // Ensure the player syncs with the queue for non-hosts
+        if (!isHost && queue.length > 0) {
+            const nextVideoId = queue[0].toString();
+            console.log("Current video: " + currentVideo);
+            console.log("Top of queue: " + nextVideoId);
+
+            // Check if the current video in the miniplayer is different from the top of the queue
+            if (currentVideo !== nextVideoId) {
+                console.log("NEW VIDEO!!!");
+                currentVideo = nextVideoId;
+
+                // Load the new video if the player exists
+                if (player && typeof player.loadVideoById === 'function') {
+                    player.loadVideoById(currentVideo); // Update the video without reinitializing the player
+                } else {
+                    embedVideoPlayer(currentVideo, isHost); // Reinitialize the player if it doesn't exist
+                }
+            }
+        }
+
+        // If the user is the host, send the host time
+        sendHostTime(isHost, lobbyCode, userId);
+
+    } catch (error) {
+        console.error("Error fetching lobby data:", error);
+    }
+}
+
+//Get or send host time
+            function sendHostTime(isHost, lobbyCode, userId) {
+                if (isHost && player && typeof player.getCurrentTime === 'function') {
+                    const hostTime = player.getCurrentTime();
+                    console.log("Host current time:", hostTime);
+
+                    fetch(`${baseURL}/lobby/${lobbyCode}/get_host_time`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            userId: userId,
+                            hostTime: hostTime
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        console.log("Host time updated:", data);
+                    })
+                    .catch(error => {
+                        console.error('Error sending host time:', error);
+                    });
+                } else if (!isHost) {
+
+                    console.log("Attempting to sync with host time...");
+                    fetch(`${baseURL}/lobby/${lobbyCode}/send_host_time`, {
+                        method: 'POST'
+                    })
+                    .then(response => {
+                        console.log("Response status:", response.status);
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log("Received host time data:", data);
+
+                        if (!data || typeof data.hostTime === 'undefined') {
+                            console.error('Host time is not available in the response.');
+                            return;
+                        }
+
+                        const hostTime = data.hostTime;
+                        console.log("Host time:", hostTime);
+                        
+                        //console.log("PLAYER CURRENT TIME: ", player.getCurrentTime())
+
+                        //const currentUserTime = player.getCurrentTime();
+                        //const timeDifference = Math.abs(currentUserTime - hostTime);
+
+                        //console.log("Time difference:", timeDifference);
+                        player.seekTo(hostTime, true);
+
+                        //if (timeDifference > 3) {
+                            //console.log("Syncing player time to host time.");
+                           // player.seekTo(hostTime, true);
+                        //} else {
+                         //   console.log("No syncing needed. Time difference is within 3 seconds.");
+                       // }
+  
+                    })
+                    .catch(error => {
+                        console.error('Error receiving host time:', error);
+                    });
+                } else {
+                    console.error("Player not initialized or user is not a host.");
+                }
+            }
+
+            function startFetchingLobbyData() {
+                // Clear the interval if it's already running
+                if (fetchInterval) {
+                    clearInterval(fetchInterval);
+                }
+
+                // Start a new interval to fetch lobby data every 5 seconds
+                fetchInterval = setInterval(fetchLobbyData, 5000);
+            }
+
+
+
+            function updateLobbyUserList(usernames) {
+                const userListElement = document.getElementById('lobby-users-list');
+                userListElement.innerHTML = '';
+
+                if (usernames.length === 0) {
+                    userListElement.innerHTML = '<li>No users in the lobby</li>';
+                    return;
+                }
+
+                usernames.forEach(username => {
+                    const listItem = document.createElement('li');
+                    listItem.textContent = username;
+                    userListElement.appendChild(listItem);
+                });
+            }
+
+            let fetchInterval;  // Declare this globally
+
+
+        // Test Part Container 
+            const testPartyContainer = document.getElementById('test-party-container');
+        // Test Part Container Buttons
+            const returnPartyButton = document.getElementById('return-party-button');
+            
+
+
+
+
+            document.getElementById('next-video').addEventListener('click', async () => {
+                const lobbyCode = localStorage.getItem("lobbyCode");
+
+                try {
+                    // Request to remove the first video from the queue
+                    const response = await fetch(`${baseURL}/lobby/${lobbyCode}/remove_from_queue`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({})
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        console.error("Error removing video:", errorData.error);
+                        return;
+                    }
+
+                    // Retrieve the updated queue from the server response
+                    const data = await response.json();
+                    const updatedQueue = data["lobbyQueue"];
+                    console.log("Updated queue:", updatedQueue);
+
+                    update_queue_list(updatedQueue);
+
+                    if (updatedQueue.length > 0) {
+                        const nextVideoId = updatedQueue[0];
+
+                        if (player && typeof player.loadVideoById === 'function') {
+                            player.loadVideoById(nextVideoId); // Load the next video without reinitializing
+                        } else {
+                            embedVideoPlayer(nextVideoId, true); // Reinitialize the player if it doesn't exist
+                        }
+                    } else {
+                        console.log("No more videos in the queue.");
+                        if (player && typeof player.stopVideo === 'function') {
+                            player.stopVideo(); // Stop the player if the queue is empty
+                        }
+                    }
+                } catch (error) {
+                    console.error("Failed to handle next video:", error);
+                }
+            });
+
+
+
+
+
+
+
+        // Test Part Container Button Functions
+        async function disconnect_user(lobbyCode, userID) {
+                const response = await fetch(`${baseURL}/lobby/${lobbyCode}/disconnect_user`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ "userId" : userID}),
+                });
+
+
+                const data = await response.json();
+                
+                localStorage.removeItem("lobbyCode")
+            }
+
+    returnPartyButton.addEventListener('click', async () => {
+        const lobbyCode = localStorage.getItem("lobbyCode");
+        const userSession = JSON.parse(localStorage.getItem("userSession"));
+        const userID = userSession ? userSession.userID : null;
+
+        if (lobbyCode && userID) {
+            try {
+                await disconnect_user(lobbyCode, userID); // Call the disconnection API
+                console.log("User disconnected successfully.");
+            } catch (error) {
+                console.error("Error disconnecting user:", error);
+            }
+        }
+
+        // Stop fetching lobby data
+        if (fetchInterval) {
+            clearInterval(fetchInterval);
+            fetchInterval = null;
+        }
+
+        // Reset UI and clear local storage
+        localStorage.removeItem("lobbyCode");
+        testPartyContainer.classList.add('hidden');
+        partyContainer.classList.remove('hidden');
+    });
+
+            });
+
+    </script>
+</body>
+</html>
